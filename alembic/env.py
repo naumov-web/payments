@@ -9,6 +9,7 @@ from app.config.settings import get_settings
 from app.infrastructure.database.base import Base
 from app.infrastructure.database.models.event import EventModel
 from app.infrastructure.database.models.snapshot import SnapshotModel
+from app.infrastructure.database.models.actor import ActorModel
 
 # Alembic Config object
 config = context.config
