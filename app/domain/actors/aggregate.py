@@ -34,8 +34,7 @@ class ActorAggregate:
             full_name=full_name,
         )
 
-        actor._apply(event)
-        actor._uncommitted_events.append(event)
+        actor._record_event(event)
 
         return actor
 
@@ -57,8 +56,28 @@ class ActorAggregate:
             full_name=full_name,
         )
 
-        actor._apply(event)
-        actor._uncommitted_events.append(event)
+        actor._record_event(event)
+
+        return actor
+
+    @classmethod
+    def create_service(
+        cls,
+        *,
+        aggregate_id,
+        name: str,
+    ) -> "ActorAggregate":
+        actor = cls()
+
+        event = ActorCreated(
+            aggregate_id=aggregate_id,
+            actor_type="SERVICE",
+            full_name=name,
+            role=None,
+            email=None,
+        )
+
+        actor._record_event(event)
 
         return actor
 
@@ -66,6 +85,14 @@ class ActorAggregate:
         self._apply(event)
 
         self.version += 1
+
+    def _record_event(
+        self,
+        event: DomainEvent,
+    ) -> None:
+        self._apply(event)
+
+        self._uncommitted_events.append(event)
 
     def _apply(self, event: DomainEvent) -> None:
         handler_name = (
