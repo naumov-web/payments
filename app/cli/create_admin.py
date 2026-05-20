@@ -1,9 +1,8 @@
 import asyncio
-from uuid import uuid4
 
-from app.domain.events.actor import ActorCreated
-from app.infrastructure.projections.actor_projection import (
-    ActorProjectionUpdater,
+from app.application.actors.create_admin import (
+    AdminAlreadyExistsError,
+    CreateAdminUseCase,
 )
 from app.infrastructure.unit_of_work import UnitOfWork
 
@@ -12,29 +11,19 @@ async def create_admin():
     email = input("Email: ").strip()
     full_name = input("Full name: ").strip()
 
-    actor_id = uuid4()
-
-    event = ActorCreated(
-        aggregate_id=actor_id,
-        actor_type="HUMAN",
-        role="ADMIN",
-        email=email,
-        full_name=full_name,
+    use_case = CreateAdminUseCase(
+        uow=UnitOfWork(),
     )
 
-    async with UnitOfWork() as uow:
-        await uow.event_store_repository.append_events(
-            aggregate_id=actor_id,
-            aggregate_type="ACTOR",
-            events=[event],
-            expected_version=0,
+    try:
+        await use_case.execute(
+            email=email,
+            full_name=full_name,
         )
 
-        projection = ActorProjectionUpdater(
-            repository=uow.actors,
-        )
-
-        await projection.apply_actor_created(event)
+    except AdminAlreadyExistsError as exc:
+        print(str(exc))
+        return
 
     print("Admin created successfully.")
 
