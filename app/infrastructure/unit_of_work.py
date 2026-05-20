@@ -4,7 +4,10 @@ from sqlalchemy.ext.asyncio import (
 )
 
 from app.infrastructure.database.engine import engine
-from app.infrastructure.event_store.repository import EventStoreRepository
+from app.infrastructure.event_store.store import EventStore
+from app.infrastructure.repositories.actor_aggregate_repository import (
+    ActorAggregateRepository,
+)
 from app.infrastructure.repositories.actor_repository import (
     ActorRepository,
 )
@@ -18,14 +21,18 @@ class UnitOfWork:
         )
 
         self.session: AsyncSession | None = None
-
-        self.event_store_repository: EventStoreRepository | None = None
+        self.event_store: EventStore | None = None
+        self.actor_aggregates: ActorAggregateRepository | None = None
         self.actors: ActorRepository | None = None
 
     async def __aenter__(self):
         self.session = self._session_factory()
-
-        self.event_store_repository = EventStoreRepository(self.session)
+        self.event_store = EventStore(self.session)
+        self.actor_aggregates = (
+            ActorAggregateRepository(
+                self.event_store,
+            )
+        )
 
         self.actors = ActorRepository(self.session)
 
