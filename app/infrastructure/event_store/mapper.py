@@ -1,5 +1,15 @@
+from uuid import UUID
+
 from app.domain.events.base import DomainEvent
-from app.infrastructure.database.models.event import EventModel
+from app.domain.events.transaction import (
+    TransactionCreated,
+)
+from app.domain.transactions.entities import (
+    LedgerEntry,
+)
+from app.infrastructure.database.models.event import (
+    EventModel,
+)
 from app.infrastructure.event_store.registry import (
     EVENT_REGISTRY,
 )
@@ -46,10 +56,21 @@ def map_model_to_domain_event(
             f"Unknown event type: {model.event_type}"
         )
 
+    payload = dict(model.payload)
+
+    if event_class is TransactionCreated:
+        payload["entries"] = [
+            LedgerEntry(
+                actor_id=UUID(entry["actor_id"]),
+                amount=entry["amount"],
+            )
+            for entry in payload["entries"]
+        ]
+
     return event_class(
         aggregate_id=model.aggregate_id,
         event_id=model.event_id,
         occurred_at=model.occurred_at,
         event_version=model.event_version,
-        **model.payload,
+        **payload,
     )

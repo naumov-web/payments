@@ -1,0 +1,2 @@
+class UnbalancedTransactionError(Exception):
+    pass

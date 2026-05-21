@@ -11,7 +11,15 @@ from app.infrastructure.repositories.actor_aggregate_repository import (
 from app.infrastructure.repositories.actor_repository import (
     ActorRepository,
 )
-
+from app.infrastructure.repositories.transaction_aggregate_repository import (
+    TransactionAggregateRepository,
+)
+from app.infrastructure.repositories.wallet_balance_repository import (
+    WalletBalanceRepository,
+)
+from app.infrastructure.repositories.ledger_repository import (
+    LedgerRepository,
+)
 
 class UnitOfWork:
     def __init__(self):
@@ -24,16 +32,17 @@ class UnitOfWork:
         self.event_store: EventStore | None = None
         self.actor_aggregates: ActorAggregateRepository | None = None
         self.actors: ActorRepository | None = None
+        self.transaction_aggregates: TransactionAggregateRepository | None = None
+        self.wallet_balances: WalletBalanceRepository | None = None
+        self.ledger: LedgerRepository | None = None
 
     async def __aenter__(self):
         self.session = self._session_factory()
         self.event_store = EventStore(self.session)
-        self.actor_aggregates = (
-            ActorAggregateRepository(
-                self.event_store,
-            )
-        )
-
+        self.actor_aggregates = ActorAggregateRepository(self.event_store)
+        self.transaction_aggregates = TransactionAggregateRepository(self.event_store)
+        self.wallet_balances = WalletBalanceRepository(self.session)
+        self.ledger = LedgerRepository(self.session)
         self.actors = ActorRepository(self.session)
 
         return self

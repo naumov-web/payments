@@ -19,4 +19,10 @@ SYSTEM_ACTORS = [
         ),
         "name": "MERCH_SERVICE",
     },
+    {
+        "actor_id": UUID(
+            "00000000-0000-0000-0000-000000000004"
+        ),
+        "name": "SYSTEM_TREASURY",
+    },
 ]
