@@ -72,6 +72,53 @@ class TransactionAggregate:
 
         return aggregate
 
+    @classmethod
+    def create_transfer(
+        cls,
+        *,
+        aggregate_id,
+        source_actor_id,
+        target_actor_id,
+        amount: int,
+    ) -> "TransactionAggregate":
+        if amount <= 0:
+            raise ValueError(
+                "Amount must be positive."
+            )
+
+        entries = [
+            LedgerEntry(
+                actor_id=source_actor_id,
+                amount=-amount,
+            ),
+            LedgerEntry(
+                actor_id=target_actor_id,
+                amount=amount,
+            ),
+        ]
+
+        total = sum(
+            entry.amount
+            for entry in entries
+        )
+
+        if total != 0:
+            raise UnbalancedTransactionError(
+                "Transaction is not balanced."
+            )
+
+        aggregate = cls()
+
+        event = TransactionCreated(
+            aggregate_id=aggregate_id,
+            transaction_type="TRANSFER",
+            entries=entries,
+        )
+
+        aggregate._record_event(event)
+
+        return aggregate
+
     def apply(
         self,
         event: DomainEvent,

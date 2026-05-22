@@ -5,21 +5,12 @@ from sqlalchemy.ext.asyncio import (
 
 from app.infrastructure.database.engine import engine
 from app.infrastructure.event_store.store import EventStore
-from app.infrastructure.repositories.actor_aggregate_repository import (
-    ActorAggregateRepository,
-)
-from app.infrastructure.repositories.actor_repository import (
-    ActorRepository,
-)
-from app.infrastructure.repositories.transaction_aggregate_repository import (
-    TransactionAggregateRepository,
-)
-from app.infrastructure.repositories.wallet_balance_repository import (
-    WalletBalanceRepository,
-)
-from app.infrastructure.repositories.ledger_repository import (
-    LedgerRepository,
-)
+from app.infrastructure.repositories.actor_aggregate_repository import ActorAggregateRepository
+from app.infrastructure.repositories.actor_repository import ActorRepository
+from app.infrastructure.repositories.transaction_aggregate_repository import TransactionAggregateRepository
+from app.infrastructure.repositories.wallet_balance_repository import WalletBalanceRepository
+from app.infrastructure.repositories.ledger_repository import LedgerRepository
+from app.infrastructure.repositories.idempotency_repository import IdempotencyRepository
 
 class UnitOfWork:
     def __init__(self):
@@ -35,6 +26,7 @@ class UnitOfWork:
         self.transaction_aggregates: TransactionAggregateRepository | None = None
         self.wallet_balances: WalletBalanceRepository | None = None
         self.ledger: LedgerRepository | None = None
+        self.idempotency: IdempotencyRepository | None = None
 
     async def __aenter__(self):
         self.session = self._session_factory()
@@ -44,6 +36,7 @@ class UnitOfWork:
         self.wallet_balances = WalletBalanceRepository(self.session)
         self.ledger = LedgerRepository(self.session)
         self.actors = ActorRepository(self.session)
+        self.idempotency = IdempotencyRepository(self.session)
 
         return self
 
