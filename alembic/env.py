@@ -12,6 +12,9 @@ from app.infrastructure.database.models.snapshot import SnapshotModel
 from app.infrastructure.database.models.actor import ActorModel
 from app.infrastructure.database.models.wallet_balance import WalletBalanceModel
 from app.infrastructure.database.models.ledger_entry import LedgerEntryModel
+from app.infrastructure.database.models.idempotency_key import (
+    IdempotencyKeyModel,
+)
 
 # Alembic Config object
 config = context.config
