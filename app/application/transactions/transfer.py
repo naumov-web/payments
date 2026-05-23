@@ -16,6 +16,7 @@ from app.infrastructure.projections.ledger_projection import (
 from app.infrastructure.projections.wallet_balance_projection import (
     WalletBalanceProjectionUpdater,
 )
+from app.infrastructure.projections.transaction_projection import TransactionProjectionUpdater
 from app.infrastructure.unit_of_work import (
     UnitOfWork,
 )
@@ -176,6 +177,11 @@ class TransferUseCase:
                     repository=uow.ledger,
                 )
             )
+            transaction_projection = (
+                TransactionProjectionUpdater(
+                    repository=uow.transactions,
+                )
+            )
 
             for event in events:
                 if isinstance(
@@ -190,6 +196,11 @@ class TransferUseCase:
 
                     await (
                         ledger_projection.apply_transaction_created(
+                            event,
+                        )
+                    )
+                    await (
+                        transaction_projection.apply_transaction_created(
                             event,
                         )
                     )
