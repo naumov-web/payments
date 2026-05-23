@@ -35,3 +35,4 @@ class MoneyWithdrawn(DomainEvent):
 class TransactionCreated(DomainEvent):
     transaction_type: str
     entries: list[LedgerEntry]
+    reference_transaction_id: UUID | None = None

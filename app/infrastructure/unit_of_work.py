@@ -11,6 +11,7 @@ from app.infrastructure.repositories.transaction_aggregate_repository import Tra
 from app.infrastructure.repositories.wallet_balance_repository import WalletBalanceRepository
 from app.infrastructure.repositories.ledger_repository import LedgerRepository
 from app.infrastructure.repositories.idempotency_repository import IdempotencyRepository
+from app.infrastructure.repositories.transaction_query_repository import TransactionQueryRepository
 
 class UnitOfWork:
     def __init__(self):
@@ -27,6 +28,7 @@ class UnitOfWork:
         self.wallet_balances: WalletBalanceRepository | None = None
         self.ledger: LedgerRepository | None = None
         self.idempotency: IdempotencyRepository | None = None
+        self.transaction_queries: TransactionQueryRepository | None = None
 
     async def __aenter__(self):
         self.session = self._session_factory()
@@ -37,6 +39,7 @@ class UnitOfWork:
         self.ledger = LedgerRepository(self.session)
         self.actors = ActorRepository(self.session)
         self.idempotency = IdempotencyRepository(self.session)
+        self.transaction_queries = TransactionQueryRepository(self.session)
 
         return self
 

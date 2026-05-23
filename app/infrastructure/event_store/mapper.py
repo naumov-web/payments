@@ -67,6 +67,19 @@ def map_model_to_domain_event(
             for entry in payload["entries"]
         ]
 
+        reference_transaction_id = (
+            payload.get(
+                "reference_transaction_id"
+            )
+        )
+
+        if reference_transaction_id is not None:
+            payload[
+                "reference_transaction_id"
+            ] = UUID(
+                reference_transaction_id
+            )
+
     return event_class(
         aggregate_id=model.aggregate_id,
         event_id=model.event_id,
