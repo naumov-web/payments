@@ -5,6 +5,27 @@ from fastapi import Header
 from fastapi import HTTPException
 from fastapi import status
 
+from app.application.transactions.refund_transfer import (
+    IdempotencyConflictError as RefundIdempotencyConflictError,
+)
+from app.application.transactions.refund_transfer import (
+    InsufficientFundsError as RefundInsufficientFundsError,
+)
+from app.application.transactions.refund_transfer import (
+    RefundAlreadyExistsError,
+)
+from app.application.transactions.refund_transfer import (
+    RefundNotAllowedError,
+)
+from app.application.transactions.refund_transfer import (
+    RefundTransferUseCase,
+)
+from app.application.transactions.refund_transfer import (
+    RefundWindowExpiredError,
+)
+from app.application.transactions.refund_transfer import (
+    TransactionNotFoundError,
+)
 from app.application.transactions.transfer import (
     ActorNotFoundError,
 )
@@ -92,4 +113,69 @@ async def create_transfer(
         transaction_id=result[
             "transaction_id"
         ]
+    )
+
+@router.patch(
+    "/{transaction_id}/refund",
+    response_model=CreateTransferResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary="Refund transfer",
+)
+async def refund_transfer(
+    transaction_id: UUID,
+    idempotency_key: str = Header(
+        ...,
+        alias="Idempotency-Key",
+    ),
+):
+    use_case = RefundTransferUseCase(
+        uow=UnitOfWork(),
+    )
+
+    try:
+        result = await use_case.execute(
+            transaction_id=transaction_id,
+            idempotency_key=idempotency_key,
+        )
+
+    except TransactionNotFoundError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=str(exc),
+        )
+
+    except RefundWindowExpiredError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
+
+    except RefundAlreadyExistsError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
+
+    except RefundNotAllowedError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
+
+    except RefundInsufficientFundsError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        )
+
+    except RefundIdempotencyConflictError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail=str(exc),
+        )
+
+    return CreateTransferResponse(
+        transaction_id=UUID(
+            result["transaction_id"]
+        )
     )

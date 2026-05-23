@@ -74,12 +74,14 @@ class TransactionAggregate:
 
     @classmethod
     def create_transfer(
-        cls,
-        *,
-        aggregate_id,
-        source_actor_id,
-        target_actor_id,
-        amount: int,
+            cls,
+            *,
+            aggregate_id,
+            source_actor_id,
+            target_actor_id,
+            amount: int,
+            transaction_type: str = "TRANSFER",
+            reference_transaction_id=None,
     ) -> "TransactionAggregate":
         if amount <= 0:
             raise ValueError(
@@ -111,8 +113,11 @@ class TransactionAggregate:
 
         event = TransactionCreated(
             aggregate_id=aggregate_id,
-            transaction_type="TRANSFER",
+            transaction_type=transaction_type,
             entries=entries,
+            reference_transaction_id=(
+                reference_transaction_id
+            ),
         )
 
         aggregate._record_event(event)
