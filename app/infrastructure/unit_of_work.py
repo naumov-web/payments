@@ -13,6 +13,7 @@ from app.infrastructure.repositories.ledger_repository import LedgerRepository
 from app.infrastructure.repositories.idempotency_repository import IdempotencyRepository
 from app.infrastructure.repositories.transaction_query_repository import TransactionQueryRepository
 from app.infrastructure.repositories.transaction_repository import TransactionRepository
+from app.infrastructure.repositories.transaction_history_repository import TransactionHistoryRepository
 
 class UnitOfWork:
     def __init__(self):
@@ -31,6 +32,7 @@ class UnitOfWork:
         self.idempotency: IdempotencyRepository | None = None
         self.transaction_queries: TransactionQueryRepository | None = None
         self.transactions: TransactionRepository | None = None
+        self.transaction_history: TransactionHistoryRepository | None = None
 
     async def __aenter__(self):
         self.session = self._session_factory()
@@ -43,6 +45,7 @@ class UnitOfWork:
         self.idempotency = IdempotencyRepository(self.session)
         self.transaction_queries = TransactionQueryRepository(self.session)
         self.transactions = TransactionRepository(self.session)
+        self.transaction_history = TransactionHistoryRepository(self.session)
 
         return self
 
