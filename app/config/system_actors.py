@@ -25,4 +25,10 @@ SYSTEM_ACTORS = [
         ),
         "name": "SYSTEM_TREASURY",
     },
+    {
+        "actor_id": UUID(
+            "00000000-0000-0000-0000-000000000005"
+        ),
+        "name": "MERCHANT_SERVICE",
+    },
 ]
