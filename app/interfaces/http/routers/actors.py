@@ -21,6 +21,15 @@ from app.interfaces.http.schemas.transaction_history import (
 from app.interfaces.http.schemas.transaction_history import (
     TransactionHistoryResponse,
 )
+from app.application.actors.get_actor_by_id import (
+    ActorNotFoundError,
+)
+from app.application.actors.get_actor_by_id import (
+    GetActorByIdUseCase,
+)
+from app.interfaces.http.schemas.actor_details import (
+    ActorDetailsResponse,
+)
 
 router = APIRouter(
     prefix="/actors",
@@ -139,4 +148,35 @@ async def get_actor_transactions(
             )
             for item in result["items"]
         ],
+    )
+
+@router.get(
+    "/{actor_id}",
+    response_model=ActorDetailsResponse,
+    summary="Get actor by id",
+)
+async def get_actor_by_id(
+    actor_id: UUID,
+):
+    use_case = GetActorByIdUseCase(
+        uow=UnitOfWork(),
+    )
+
+    try:
+        result = await use_case.execute(
+            actor_id=actor_id,
+        )
+
+    except ActorNotFoundError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=str(exc),
+        )
+
+    return ActorDetailsResponse(
+        actor_id=result["actor_id"],
+        name=result["name"],
+        email=result["email"],
+        role=result["role"],
+        balance=result["balance"],
     )
