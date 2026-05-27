@@ -6,6 +6,7 @@ from app.interfaces.http.routers.health import router as health_router
 from app.interfaces.http.routers.actors import router as actors_router
 from app.interfaces.http.routers.transfers import router as transfers_router
 from app.interfaces.http.routers.purchases import router as purchases_router
+from app.interfaces.http.routers.withdrawals import router as withdrawals_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -38,6 +39,7 @@ def create_app() -> FastAPI:
     result.include_router(actors_router)
     result.include_router(transfers_router)
     result.include_router(purchases_router)
+    result.include_router(withdrawals_router)
 
     return result
 
