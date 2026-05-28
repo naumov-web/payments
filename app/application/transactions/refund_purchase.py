@@ -26,7 +26,7 @@ from app.infrastructure.projections.wallet_balance_projection import (
 from app.infrastructure.unit_of_work import (
     UnitOfWork,
 )
-
+from app.infrastructure.outbox.publisher import OutboxEventPublisher
 
 class TransactionNotFoundError(Exception):
     pass
@@ -235,6 +235,8 @@ class RefundPurchaseUseCase:
                     )
                 )
             )
+            outbox_publisher = OutboxEventPublisher(repository=uow.outbox)
+            await outbox_publisher.publish(events)
 
             wallet_projection = (
                 WalletBalanceProjectionUpdater(

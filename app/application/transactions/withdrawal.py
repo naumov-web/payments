@@ -22,7 +22,7 @@ from app.infrastructure.projections.wallet_balance_projection import (
 from app.infrastructure.unit_of_work import (
     UnitOfWork,
 )
-
+from app.infrastructure.outbox.publisher import OutboxEventPublisher
 
 WITHDRAWAL_SERVICE_ACTOR_ID = UUID(
     "00000000-0000-0000-0000-000000000006"
@@ -95,9 +95,7 @@ class WithdrawalUseCase:
                         )
                     )
 
-                return (
-                    existing_key.response_payload
-                )
+                return existing_key.response_payload
 
             actor = (
                 await uow.actors.get_by_id(
@@ -158,6 +156,8 @@ class WithdrawalUseCase:
                     )
                 )
             )
+            outbox_publisher = OutboxEventPublisher(repository=uow.outbox)
+            await outbox_publisher.publish(events)
 
             wallet_projection = (
                 WalletBalanceProjectionUpdater(
