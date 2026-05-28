@@ -14,6 +14,7 @@ from app.infrastructure.database.models.wallet_balance import WalletBalanceModel
 from app.infrastructure.database.models.ledger_entry import LedgerEntryModel
 from app.infrastructure.database.models.idempotency_key import IdempotencyKeyModel
 from app.infrastructure.database.models.transaction import TransactionModel
+from app.infrastructure.database.models.outbox_message import OutboxMessageModel
 
 # Alembic Config object
 config = context.config

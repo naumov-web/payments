@@ -20,7 +20,7 @@ from app.infrastructure.projections.transaction_projection import TransactionPro
 from app.infrastructure.unit_of_work import (
     UnitOfWork,
 )
-
+from app.infrastructure.outbox.publisher import OutboxEventPublisher
 
 class ActorNotFoundError(Exception):
     pass
@@ -163,6 +163,8 @@ class TransferUseCase:
                     )
                 )
             )
+            outbox_publisher = OutboxEventPublisher(repository=uow.outbox)
+            await outbox_publisher.publish(events)
 
             wallet_projection = (
                 WalletBalanceProjectionUpdater(
