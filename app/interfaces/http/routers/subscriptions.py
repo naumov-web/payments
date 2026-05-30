@@ -31,6 +31,9 @@ from app.interfaces.http.schemas.subscription import (
 from app.interfaces.http.schemas.subscription import (
     CreateSubscriptionResponse,
 )
+from app.application.subscriptions.get_subscription_by_id import GetSubscriptionByIdUseCase
+from app.application.subscriptions.get_subscription_by_id import SubscriptionNotFoundError as DetailSubscriptionNotFoundError
+from app.interfaces.http.schemas.subscription_details import SubscriptionDetailsResponse
 
 router = APIRouter(
     prefix="/subscriptions",
@@ -130,3 +133,57 @@ async def cancel_subscription(
     return {
         "success": True,
     }
+
+@router.get(
+    "/{subscription_id}",
+    response_model=SubscriptionDetailsResponse,
+    summary="Get subscription by id",
+)
+async def get_subscription_by_id(
+    subscription_id: UUID,
+):
+    use_case = GetSubscriptionByIdUseCase(
+        uow=UnitOfWork(),
+    )
+
+    try:
+        result = await use_case.execute(
+            subscription_id=subscription_id,
+        )
+
+    except DetailSubscriptionNotFoundError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=str(exc),
+        )
+
+    return SubscriptionDetailsResponse(
+        subscription_id=result[
+            "subscription_id"
+        ],
+        subscriber_actor_id=result[
+            "subscriber_actor_id"
+        ],
+        subscriber_name=result[
+            "subscriber_name"
+        ],
+        service_actor_id=result[
+            "service_actor_id"
+        ],
+        service_name=result[
+            "service_name"
+        ],
+        amount=result["amount"],
+        billing_period=str(
+            result["billing_period"]
+        ),
+        status=str(
+            result["status"]
+        ),
+        next_billing_at=result[
+            "next_billing_at"
+        ],
+        created_at=result[
+            "created_at"
+        ],
+    )
