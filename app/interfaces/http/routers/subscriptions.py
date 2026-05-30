@@ -19,9 +19,12 @@ from app.application.subscriptions.create_subscription import (
 from app.application.subscriptions.create_subscription import (
     SubscriptionAlreadyExistsError,
 )
-from app.infrastructure.unit_of_work import (
-    UnitOfWork,
+from app.application.subscriptions.cancel_subscription import (
+    CancelSubscriptionUseCase,
+    SubscriptionAlreadyCancelledError,
+    SubscriptionNotFoundError
 )
+from app.infrastructure.unit_of_work import UnitOfWork
 from app.interfaces.http.schemas.subscription import (
     CreateSubscriptionRequest,
 )
@@ -94,3 +97,36 @@ async def create_subscription(
             result["transaction_id"]
         ),
     )
+
+@router.delete(
+    "/{subscription_id}/cancel",
+    status_code=200,
+    summary="Cancel subscription",
+)
+async def cancel_subscription(
+    subscription_id: UUID,
+):
+    use_case = CancelSubscriptionUseCase(
+        uow=UnitOfWork(),
+    )
+
+    try:
+        await use_case.execute(
+            subscription_id=subscription_id,
+        )
+
+    except SubscriptionNotFoundError as exc:
+        raise HTTPException(
+            status_code=404,
+            detail=str(exc),
+        )
+
+    except SubscriptionAlreadyCancelledError as exc:
+        raise HTTPException(
+            status_code=409,
+            detail=str(exc),
+        )
+
+    return {
+        "success": True,
+    }
