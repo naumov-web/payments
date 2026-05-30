@@ -17,6 +17,8 @@ from app.infrastructure.repositories.transaction_history_repository import Trans
 from app.infrastructure.repositories.transaction_details_repository import TransactionDetailsRepository
 from app.infrastructure.repositories.actor_details_repository import ActorDetailsRepository
 from app.infrastructure.repositories.outbox_repository import OutboxRepository
+from app.infrastructure.repositories.subscription_repository import SubscriptionRepository
+from app.infrastructure.repositories.due_subscriptions_repository import DueSubscriptionsRepository
 
 class UnitOfWork:
     def __init__(self):
@@ -39,6 +41,8 @@ class UnitOfWork:
         self.transaction_details: TransactionDetailsRepository | None = None
         self.actor_details: ActorDetailsRepository | None = None
         self.outbox: OutboxRepository | None = None
+        self.subscriptions: SubscriptionRepository | None = None
+        self.due_subscriptions: DueSubscriptionsRepository | None = None
 
     async def __aenter__(self):
         self.session = self._session_factory()
@@ -55,6 +59,8 @@ class UnitOfWork:
         self.transaction_details = TransactionDetailsRepository(self.session)
         self.actor_details = ActorDetailsRepository(self.session)
         self.outbox = OutboxRepository(self.session)
+        self.subscriptions = SubscriptionRepository(self.session)
+        self.due_subscriptions = DueSubscriptionsRepository(self.session)
 
         return self
 
