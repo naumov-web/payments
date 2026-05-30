@@ -37,4 +37,10 @@ SYSTEM_ACTORS = [
         ),
         "name": "WITHDRAWAL_SERVICE",
     },
+{
+        "actor_id": UUID(
+            "00000000-0000-0000-0000-000000000007"
+        ),
+        "name": "SUBSCRIPTION_SERVICE",
+    },
 ]
