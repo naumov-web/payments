@@ -27,6 +27,7 @@ opentelemetry-api = "^1.26.0"
 opentelemetry-sdk = "^1.26.0"
 alembic = {version = "^1.18.4", source = "mirrors"}
 psycopg = {extras = ["binary"], version = "^3.3.4"}
+python-dateutil = "^2.9.0.post0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.3.2"
