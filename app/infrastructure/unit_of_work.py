@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
 )
-
+from sqlalchemy.ext.asyncio import async_sessionmaker
 from app.infrastructure.database.engine import engine
 from app.infrastructure.event_store.store import EventStore
 from app.infrastructure.repositories.actor_aggregate_repository import ActorAggregateRepository
@@ -23,10 +23,16 @@ from app.infrastructure.repositories.subscription_details_repository import Subs
 from app.infrastructure.repositories.subscription_billing_repository import SubscriptionBillingRepository
 
 class UnitOfWork:
-    def __init__(self):
-        self._session_factory = async_sessionmaker(
-            bind=engine,
-            expire_on_commit=False,
+    def __init__(
+        self,
+        session_factory= None,
+    ):
+        self._session_factory = (
+            session_factory
+            or async_sessionmaker(
+                bind=engine,
+                expire_on_commit=False,
+            )
         )
 
         self.session: AsyncSession | None = None
