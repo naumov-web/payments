@@ -42,6 +42,17 @@ services:
     networks:
       - backend
 
+  postgres_test:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: wallet_test
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5433:5432"
+    networks:
+      - backend
+
   redis:
     image: redis:7
     container_name: wallet_redis
