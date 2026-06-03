@@ -13,27 +13,21 @@ import pytest_asyncio
 
 from alembic import command
 from alembic.config import Config
-
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import (
     AsyncSession,
     async_sessionmaker,
     create_async_engine,
 )
 
-from app.config.settings import (
-    get_settings,
-)
-from app.infrastructure.unit_of_work import (
-    UnitOfWork,
-)
-
+from app.config.settings import get_settings
+from app.infrastructure.unit_of_work import UnitOfWork
 
 TEST_DATABASE_URL = (
     "postgresql+asyncpg://"
     "postgres:postgres@postgres_test:5432/"
     "wallet_test"
 )
-
 
 @pytest.fixture(
     scope="session",
@@ -47,23 +41,43 @@ def migrate_database():
 
     yield
 
+@pytest_asyncio.fixture(autouse=True)
+async def clean_database(
+    test_session_factory,
+):
+    async with test_session_factory() as session:
+        await session.execute(
+            text(
+                """
+                TRUNCATE TABLE
+                    subscription_billings,
+                    subscriptions,
+                    wallet_balances,
+                    transactions,
+                    actors,
+                    outbox_messages,
+                    ledger_entries,
+                    idempotency_keys,
+                    events,
+                    snapshots
+                RESTART IDENTITY CASCADE
+                """
+            )
+        )
+
+        await session.commit()
+
+    yield
 
 @pytest_asyncio.fixture
 async def test_engine():
-    engine = create_async_engine(
-        TEST_DATABASE_URL,
-        future=True,
-    )
-
+    engine = create_async_engine(TEST_DATABASE_URL, future=True)
     yield engine
-
     await engine.dispose()
 
 
 @pytest.fixture
-def test_session_factory(
-    test_engine,
-):
+def test_session_factory(test_engine):
     return async_sessionmaker(
         bind=test_engine,
         expire_on_commit=False,
@@ -71,11 +85,8 @@ def test_session_factory(
         class_=AsyncSession,
     )
 
-
 @pytest_asyncio.fixture
-async def db_session(
-    test_session_factory,
-):
+async def db_session(test_session_factory):
     async with test_session_factory() as session:
         yield session
 
@@ -83,9 +94,5 @@ async def db_session(
 
 
 @pytest.fixture
-def uow(
-    test_session_factory,
-):
-    return UnitOfWork(
-        session_factory=test_session_factory,
-    )
+def uow(test_session_factory):
+    return UnitOfWork(session_factory=test_session_factory)
