@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build containers
+        run: docker compose build
+
+      - name: Start infrastructure
+        run: |
+          docker compose up -d \
+            postgres_test \
+            redis \
+            zookeeper \
+            kafka
+
+      - name: Wait for PostgreSQL
+        run: |
+          until docker compose exec -T postgres_test pg_isready -U postgres -d wallet_test
+          do
+            sleep 2
+          done
+
+      - name: Run tests
+        run: |
+          docker compose run --rm app \
+            python -m pytest -vv
+
+      - name: Show logs on failure
+        if: failure()
+        run: |
+          docker compose logs
+
+      - name: Shutdown
+        if: always()
+        run: |
+          docker compose down -v
