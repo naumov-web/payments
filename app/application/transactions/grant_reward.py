@@ -1,29 +1,18 @@
 from uuid import UUID
 from uuid import uuid4
 
-from app.domain.events.transaction import (
-    TransactionCreated,
-)
-from app.domain.transactions.aggregate import (
-    TransactionAggregate,
-)
-from app.infrastructure.projections.wallet_balance_projection import (
-    WalletBalanceProjectionUpdater,
-)
-from app.infrastructure.projections.ledger_projection import (
-    LedgerProjectionUpdater,
-)
+from app.domain.events.transaction import TransactionCreated
+from app.domain.transactions.aggregate import TransactionAggregate
+from app.infrastructure.projections.wallet_balance_projection import WalletBalanceProjectionUpdater
+from app.infrastructure.projections.ledger_projection import LedgerProjectionUpdater
 from app.infrastructure.projections.transaction_projection import TransactionProjectionUpdater
 from app.infrastructure.unit_of_work import UnitOfWork
-
 
 class ActorNotFoundError(Exception):
     pass
 
-
 class InsufficientFundsError(Exception):
     pass
-
 
 class GrantRewardUseCase:
     def __init__(
@@ -33,10 +22,7 @@ class GrantRewardUseCase:
         rewards_pool_actor_id: UUID,
     ):
         self._uow = uow
-
-        self._rewards_pool_actor_id = (
-            rewards_pool_actor_id
-        )
+        self._rewards_pool_actor_id = rewards_pool_actor_id
 
     async def execute(
         self,
@@ -45,82 +31,33 @@ class GrantRewardUseCase:
         amount: int,
     ) -> UUID:
         async with self._uow as uow:
-            target_actor = (
-                await uow.actors.get_by_id(
-                    target_actor_id,
-                )
-            )
+            target_actor = await uow.actors.get_by_id(target_actor_id,)
 
             if target_actor is None:
-                raise ActorNotFoundError(
-                    "Target actor not found."
-                )
+                raise ActorNotFoundError("Target actor not found.")
 
-            source_balance = (
-                await uow.wallet_balances.get_balance(
-                    self._rewards_pool_actor_id,
-                )
-            )
+            source_balance = await uow.wallet_balances.get_balance(self._rewards_pool_actor_id)
 
             if source_balance < amount:
-                raise InsufficientFundsError(
-                    "Insufficient rewards pool balance."
-                )
+                raise InsufficientFundsError("Insufficient rewards pool balance.")
 
             transaction_id = uuid4()
-
-            aggregate = (
-                TransactionAggregate.create_reward(
-                    aggregate_id=transaction_id,
-                    source_actor_id=(
-                        self._rewards_pool_actor_id
-                    ),
-                    target_actor_id=target_actor_id,
-                    amount=amount,
-                )
+            aggregate = TransactionAggregate.create_reward(
+                aggregate_id=transaction_id,
+                source_actor_id=self._rewards_pool_actor_id,
+                target_actor_id=target_actor_id,
+                amount=amount,
             )
 
-            events = (
-                await uow.transaction_aggregates.save(
-                    aggregate,
-                )
-            )
+            events = await uow.transaction_aggregates.save(aggregate)
 
-            wallet_projection = (
-                WalletBalanceProjectionUpdater(
-                    repository=uow.wallet_balances,
-                )
-            )
-            ledger_projection = (
-                LedgerProjectionUpdater(
-                    repository=uow.ledger,
-                )
-            )
-            transaction_projection = (
-                TransactionProjectionUpdater(
-                    repository=uow.transactions,
-                )
-            )
-
+            wallet_projection = WalletBalanceProjectionUpdater(repository=uow.wallet_balances)
+            ledger_projection = LedgerProjectionUpdater(repository=uow.ledger)
+            transaction_projection = TransactionProjectionUpdater(repository=uow.transactions)
             for event in events:
-                if isinstance(
-                    event,
-                    TransactionCreated,
-                ):
-                    await (
-                        wallet_projection.apply_transaction_created(
-                            event,
-                        )
-                    )
-                    await (
-                        ledger_projection.apply_transaction_created(
-                            event,
-                        )
-                    )
-                    await (
-                        transaction_projection.apply_transaction_created(
-                            event,
-                        )
-                    )
+                if isinstance(event, TransactionCreated):
+                    await wallet_projection.apply_transaction_created(event)
+                    await ledger_projection.apply_transaction_created(event)
+                    await transaction_projection.apply_transaction_created(event)
 
             return transaction_id

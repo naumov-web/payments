@@ -7,22 +7,13 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database.models.subscription_billing import SubscriptionBillingModel
 
 class SubscriptionBillingRepository:
-    def __init__(
-        self,
-        session: AsyncSession,
-    ):
+    def __init__(self, session: AsyncSession):
         self._session = session
 
-    async def save(
-        self,
-        billing: SubscriptionBillingModel,
-    ) -> None:
+    async def save(self, billing: SubscriptionBillingModel) -> None:
         self._session.add(billing)
 
-    async def get_by_id(
-        self,
-        billing_id: UUID,
-    ) -> SubscriptionBillingModel | None:
+    async def get_by_id(self, billing_id: UUID) -> SubscriptionBillingModel | None:
         return await self._session.get(
             SubscriptionBillingModel,
             billing_id,
@@ -33,10 +24,7 @@ class SubscriptionBillingRepository:
         *,
         subscription_id: UUID,
         billing_date: datetime,
-    ) -> (
-        SubscriptionBillingModel
-        | None
-    ):
+    ) -> SubscriptionBillingModel | None:
         query = (
             select(SubscriptionBillingModel)
             .where(SubscriptionBillingModel.subscription_id == subscription_id)
@@ -48,10 +36,10 @@ class SubscriptionBillingRepository:
         return result.scalar_one_or_none()
 
     async def exists_for_period(
-            self,
-            *,
-            subscription_id: UUID,
-            billing_date: datetime,
+        self,
+        *,
+        subscription_id: UUID,
+        billing_date: datetime,
     ) -> bool:
         query = select(
             exists()

@@ -22,9 +22,6 @@ from app.infrastructure.database.models.subscription import (
 from app.workers.subscription_billing_worker import (
     SubscriptionBillingWorker,
 )
-from app.application.subscriptions.charge_subscription import (
-    InsufficientFundsError,
-)
 
 class FakeChargeSubscriptionUseCase:
     called_subscription_ids = []

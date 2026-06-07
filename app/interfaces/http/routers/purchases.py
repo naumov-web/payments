@@ -7,56 +7,32 @@ from fastapi import status
 
 from app.application.transactions.purchase import (
     ActorNotFoundError,
-)
-from app.application.transactions.purchase import (
     IdempotencyConflictError,
-)
-from app.application.transactions.purchase import (
     InsufficientFundsError,
-)
-from app.application.transactions.purchase import (
     InvalidPurchaseError,
-)
-from app.application.transactions.purchase import (
     PurchaseUseCase,
 )
 from app.application.transactions.refund_purchase import (
     IdempotencyConflictError as RefundIdempotencyConflictError,
-)
-from app.application.transactions.refund_purchase import (
     InsufficientFundsError as RefundInsufficientFundsError,
-)
-from app.application.transactions.refund_purchase import (
     RefundAlreadyExistsError,
-)
-from app.application.transactions.refund_purchase import (
     RefundNotAllowedError,
-)
-from app.application.transactions.refund_purchase import (
     RefundPurchaseUseCase,
 )
 from app.application.transactions.refund_purchase import (
     RefundWindowExpiredError,
-)
-from app.application.transactions.refund_purchase import (
     TransactionNotFoundError,
 )
-from app.infrastructure.unit_of_work import (
-    UnitOfWork,
-)
+from app.infrastructure.unit_of_work import UnitOfWork
 from app.interfaces.http.schemas.purchase import (
     CreatePurchaseRequest,
-)
-from app.interfaces.http.schemas.purchase import (
     CreatePurchaseResponse,
 )
-
 
 router = APIRouter(
     prefix="/purchases",
     tags=["Purchases"],
 )
-
 
 @router.post(
     "",
@@ -71,18 +47,12 @@ async def create_purchase(
         alias="Idempotency-Key",
     ),
 ):
-    use_case = PurchaseUseCase(
-        uow=UnitOfWork(),
-    )
+    use_case = PurchaseUseCase(uow=UnitOfWork())
 
     try:
         result = await use_case.execute(
-            buyer_actor_id=(
-                request.buyer_actor_id
-            ),
-            merchant_actor_id=(
-                request.merchant_actor_id
-            ),
+            buyer_actor_id=request.buyer_actor_id,
+            merchant_actor_id=request.merchant_actor_id,
             amount=request.amount,
             idempotency_key=idempotency_key,
         )
@@ -112,9 +82,7 @@ async def create_purchase(
         )
 
     return CreatePurchaseResponse(
-        transaction_id=UUID(
-            result["transaction_id"]
-        )
+        transaction_id=UUID(result["transaction_id"])
     )
 
 @router.patch(
@@ -130,9 +98,7 @@ async def refund_purchase(
         alias="Idempotency-Key",
     ),
 ):
-    use_case = RefundPurchaseUseCase(
-        uow=UnitOfWork(),
-    )
+    use_case = RefundPurchaseUseCase(uow=UnitOfWork())
 
     try:
         result = await use_case.execute(
@@ -177,7 +143,5 @@ async def refund_purchase(
         )
 
     return CreatePurchaseResponse(
-        transaction_id=UUID(
-            result["transaction_id"]
-        )
+        transaction_id=UUID(result["transaction_id"])
     )

@@ -5,7 +5,6 @@ from sqlalchemy.orm import mapped_column
 
 from app.infrastructure.database.base import Base
 
-
 class WalletBalanceModel(Base):
     __tablename__ = "wallet_balances"
 

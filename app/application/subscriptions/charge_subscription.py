@@ -4,40 +4,17 @@ from datetime import timedelta
 from uuid import UUID
 from uuid import uuid4
 
-from app.domain.events.transaction import (
-    TransactionCreated,
-)
-from app.domain.subscriptions.billing_period import (
-    BillingPeriod,
-)
-from app.domain.subscriptions.billing_status import (
-    BillingStatus,
-)
-from app.domain.subscriptions.subscription_status import (
-    SubscriptionStatus,
-)
-from app.domain.transactions.aggregate import (
-    TransactionAggregate,
-)
-from app.infrastructure.database.models.subscription_billing import (
-    SubscriptionBillingModel,
-)
-from app.infrastructure.outbox.publisher import (
-    OutboxEventPublisher,
-)
-from app.infrastructure.projections.ledger_projection import (
-    LedgerProjectionUpdater,
-)
-from app.infrastructure.projections.transaction_projection import (
-    TransactionProjectionUpdater,
-)
-from app.infrastructure.projections.wallet_balance_projection import (
-    WalletBalanceProjectionUpdater,
-)
-from app.infrastructure.unit_of_work import (
-    UnitOfWork,
-)
-
+from app.domain.events.transaction import TransactionCreated
+from app.domain.subscriptions.billing_period import BillingPeriod
+from app.domain.subscriptions.billing_status import BillingStatus
+from app.domain.subscriptions.subscription_status import SubscriptionStatus
+from app.domain.transactions.aggregate import TransactionAggregate
+from app.infrastructure.database.models.subscription_billing import SubscriptionBillingModel
+from app.infrastructure.outbox.publisher import OutboxEventPublisher
+from app.infrastructure.projections.ledger_projection import LedgerProjectionUpdater
+from app.infrastructure.projections.transaction_projection import TransactionProjectionUpdater
+from app.infrastructure.projections.wallet_balance_projection import WalletBalanceProjectionUpdater
+from app.infrastructure.unit_of_work import UnitOfWork
 
 class SubscriptionNotFoundError(Exception):
     pass
@@ -59,12 +36,9 @@ class ChargeSubscriptionUseCase:
             if subscription is None:
                 raise SubscriptionNotFoundError("Subscription not found.")
 
-            already_billed = await (
-                uow.subscription_billing
-                .exists_for_period(
-                    subscription_id=subscription.subscription_id,
-                    billing_date=subscription.next_billing_at
-                )
+            already_billed = await uow.subscription_billing.exists_for_period(
+                subscription_id=subscription.subscription_id,
+                billing_date=subscription.next_billing_at
             )
 
             if already_billed:
@@ -82,10 +56,7 @@ class ChargeSubscriptionUseCase:
 
                 await uow.subscription_billing.save(billing)
                 subscription.status = SubscriptionStatus.PAST_DUE
-                subscription.retry_after = (
-                    datetime.now(UTC)
-                    + timedelta(days=1)
-                )
+                subscription.retry_after = datetime.now(UTC) + timedelta(days=1)
 
                 return {
                     "status": "insufficient_funds",
@@ -110,38 +81,16 @@ class ChargeSubscriptionUseCase:
 
             for event in events:
                 if isinstance(event, TransactionCreated):
-                    await (
-                        wallet_projection.apply_transaction_created(
-                            event,
-                        )
-                    )
+                    await wallet_projection.apply_transaction_created(event)
+                    await ledger_projection.apply_transaction_created(event)
+                    await transaction_projection.apply_transaction_created(event)
 
-                    await (
-                        ledger_projection.apply_transaction_created(
-                            event,
-                        )
-                    )
-
-                    await (
-                        transaction_projection.apply_transaction_created(
-                            event,
-                        )
-                    )
-
-            billing = (
-                SubscriptionBillingModel(
-                    billing_id=uuid4(),
-                    subscription_id=(
-                        subscription.subscription_id
-                    ),
-                    transaction_id=(
-                        transaction_id
-                    ),
-                    billing_date=(
-                        subscription.next_billing_at
-                    ),
-                    status=BillingStatus.SUCCESS,
-                )
+            billing = SubscriptionBillingModel(
+                billing_id=uuid4(),
+                subscription_id=subscription.subscription_id,
+                transaction_id=transaction_id,
+                billing_date=subscription.next_billing_at,
+                status=BillingStatus.SUCCESS,
             )
 
             await uow.subscription_billing.save(billing)
@@ -149,27 +98,13 @@ class ChargeSubscriptionUseCase:
             subscription.status = SubscriptionStatus.ACTIVE
             subscription.retry_after = None
 
-            if (
-                subscription.billing_period
-                == BillingPeriod.WEEKLY
-            ):
-                subscription.next_billing_at = (
-                    subscription.next_billing_at
-                    + timedelta(days=7)
-                )
+            if subscription.billing_period == BillingPeriod.WEEKLY:
+                subscription.next_billing_at = subscription.next_billing_at + timedelta(days=7)
 
-            elif (
-                subscription.billing_period
-                == BillingPeriod.MONTHLY
-            ):
-                subscription.next_billing_at = (
-                    subscription.next_billing_at
-                    + timedelta(days=30)
-                )
+            elif subscription.billing_period == BillingPeriod.MONTHLY:
+                subscription.next_billing_at = subscription.next_billing_at + timedelta(days=30)
 
             return {
                 "status": "Success",
-                "transaction_id": str(
-                    transaction_id
-                )
+                "transaction_id": str(transaction_id)
             }

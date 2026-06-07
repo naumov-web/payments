@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import (
 )
 from app.infrastructure.database.engine import engine
 
-
 async_session_factory = async_sessionmaker(
     bind=engine,
     expire_on_commit=False,

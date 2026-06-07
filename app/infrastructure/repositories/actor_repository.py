@@ -5,7 +5,6 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.infrastructure.database.models.actor import ActorModel
 
-
 class ActorRepository:
     def __init__(self, session: AsyncSession):
         self._session = session
@@ -26,10 +25,7 @@ class ActorRepository:
 
         return result.scalar_one_or_none()
 
-    async def get_by_email(
-        self,
-        email: str,
-    ) -> ActorModel | None:
+    async def get_by_email(self, email: str) -> ActorModel | None:
         query = (
             select(ActorModel)
             .where(ActorModel.email == email)

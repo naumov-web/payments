@@ -1,7 +1,4 @@
-from app.infrastructure.database.models.ledger_entry import (
-    LedgerEntryModel,
-)
-
+from app.infrastructure.database.models.ledger_entry import LedgerEntryModel
 
 class LedgerRepository:
     def __init__(self, session):

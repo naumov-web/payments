@@ -7,35 +7,21 @@ from fastapi import status
 
 from app.application.transactions.withdrawal import (
     ActorNotFoundError,
-)
-from app.application.transactions.withdrawal import (
     IdempotencyConflictError,
-)
-from app.application.transactions.withdrawal import (
     InsufficientFundsError,
-)
-from app.application.transactions.withdrawal import (
     InvalidWithdrawalError,
-)
-from app.application.transactions.withdrawal import (
     WithdrawalUseCase,
 )
-from app.infrastructure.unit_of_work import (
-    UnitOfWork,
-)
+from app.infrastructure.unit_of_work import UnitOfWork
 from app.interfaces.http.schemas.withdrawal import (
     CreateWithdrawalRequest,
-)
-from app.interfaces.http.schemas.withdrawal import (
     CreateWithdrawalResponse,
 )
-
 
 router = APIRouter(
     prefix="/withdrawals",
     tags=["Withdrawals"],
 )
-
 
 @router.post(
     "",
@@ -50,9 +36,7 @@ async def create_withdrawal(
         alias="Idempotency-Key",
     ),
 ):
-    use_case = WithdrawalUseCase(
-        uow=UnitOfWork(),
-    )
+    use_case = WithdrawalUseCase(uow=UnitOfWork())
 
     try:
         result = await use_case.execute(
@@ -86,7 +70,5 @@ async def create_withdrawal(
         )
 
     return CreateWithdrawalResponse(
-        transaction_id=UUID(
-            result["transaction_id"]
-        )
+        transaction_id=UUID(result["transaction_id"])
     )

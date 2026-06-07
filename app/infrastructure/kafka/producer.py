@@ -10,9 +10,7 @@ class KafkaProducerAdapter:
     ):
         self._producer = (
             AIOKafkaProducer(
-                bootstrap_servers=(
-                    bootstrap_servers
-                ),
+                bootstrap_servers=bootstrap_servers,
                 value_serializer=(
                     lambda value: json.dumps(
                         value,

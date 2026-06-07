@@ -6,16 +6,10 @@ from app.infrastructure.repositories.actor_repository import (
 
 
 class ActorProjectionUpdater:
-    def __init__(
-        self,
-        repository: ActorRepository,
-    ):
+    def __init__(self, repository: ActorRepository):
         self._repository = repository
 
-    async def apply_actor_created(
-        self,
-        event: ActorCreated,
-    ) -> None:
+    async def apply_actor_created(self, event: ActorCreated) -> None:
         actor = ActorModel(
             actor_id=event.aggregate_id,
             actor_type=event.actor_type,

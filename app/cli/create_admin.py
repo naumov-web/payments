@@ -10,10 +10,7 @@ from app.infrastructure.unit_of_work import UnitOfWork
 async def create_admin():
     email = input("Email: ").strip()
     full_name = input("Full name: ").strip()
-
-    use_case = CreateAdminUseCase(
-        uow=UnitOfWork(),
-    )
+    use_case = CreateAdminUseCase(uow=UnitOfWork())
 
     try:
         await use_case.execute(

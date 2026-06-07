@@ -7,35 +7,24 @@ from app.application.actors.create_actor import (
     ActorIdAlreadyExistsError,
     CreateActorUseCase,
 )
-from app.application.transactions.get_actor_transactions import (
-    GetActorTransactionsUseCase,
-)
+from app.application.transactions.get_actor_transactions import GetActorTransactionsUseCase
 from app.infrastructure.unit_of_work import UnitOfWork
 from app.interfaces.http.schemas.actor import (
     CreateActorRequest,
     CreateActorResponse,
 )
-from app.interfaces.http.schemas.transaction_history import (
-    TransactionHistoryItemResponse,
-)
-from app.interfaces.http.schemas.transaction_history import (
-    TransactionHistoryResponse,
-)
+from app.interfaces.http.schemas.transaction_history import TransactionHistoryItemResponse
+from app.interfaces.http.schemas.transaction_history import TransactionHistoryResponse
 from app.application.actors.get_actor_by_id import (
     ActorNotFoundError,
-)
-from app.application.actors.get_actor_by_id import (
     GetActorByIdUseCase,
 )
-from app.interfaces.http.schemas.actor_details import (
-    ActorDetailsResponse,
-)
+from app.interfaces.http.schemas.actor_details import ActorDetailsResponse
 
 router = APIRouter(
     prefix="/actors",
     tags=["actors"],
 )
-
 
 @router.post(
     "",
@@ -55,12 +44,8 @@ router = APIRouter(
         },
     },
 )
-async def create_actor(
-    request: CreateActorRequest,
-) -> CreateActorResponse:
-    use_case = CreateActorUseCase(
-        uow=UnitOfWork(),
-    )
+async def create_actor(request: CreateActorRequest) -> CreateActorResponse:
+    use_case = CreateActorUseCase(uow=UnitOfWork())
 
     try:
         await use_case.execute(
@@ -103,48 +88,26 @@ async def get_actor_transactions(
         ge=0,
     ),
 ):
-    use_case = (
-        GetActorTransactionsUseCase(
-            uow=UnitOfWork(),
-        )
-    )
+    use_case = GetActorTransactionsUseCase(uow=UnitOfWork())
 
-    result = await (
-        use_case.execute(
-            actor_id=actor_id,
-            limit=limit,
-            offset=offset,
-        )
+    result = await use_case.execute(
+        actor_id=actor_id,
+        limit=limit,
+        offset=offset,
     )
 
     return TransactionHistoryResponse(
-        total_count=result[
-            "total_count"
-        ],
+        total_count=result["total_count"],
         items=[
             TransactionHistoryItemResponse(
-                transaction_id=item[
-                    "transaction_id"
-                ],
-                transaction_type=item[
-                    "transaction_type"
-                ],
-                direction=item[
-                    "direction"
-                ],
+                transaction_id=item["transaction_id"],
+                transaction_type=item["transaction_type"],
+                direction=item["direction"],
                 amount=item["amount"],
-                counterparty_actor_id=item[
-                    "counterparty_actor_id"
-                ],
-                counterparty_name=item[
-                    "counterparty_name"
-                ],
-                reference_transaction_id=item[
-                    "reference_transaction_id"
-                ],
-                created_at=item[
-                    "created_at"
-                ],
+                counterparty_actor_id=item["counterparty_actor_id"],
+                counterparty_name=item["counterparty_name"],
+                reference_transaction_id=item["reference_transaction_id"],
+                created_at=item["created_at"],
             )
             for item in result["items"]
         ],
@@ -155,18 +118,11 @@ async def get_actor_transactions(
     response_model=ActorDetailsResponse,
     summary="Get actor by id",
 )
-async def get_actor_by_id(
-    actor_id: UUID,
-):
-    use_case = GetActorByIdUseCase(
-        uow=UnitOfWork(),
-    )
+async def get_actor_by_id(actor_id: UUID):
+    use_case = GetActorByIdUseCase(uow=UnitOfWork())
 
     try:
-        result = await use_case.execute(
-            actor_id=actor_id,
-        )
-
+        result = await use_case.execute(actor_id=actor_id)
     except ActorNotFoundError as exc:
         raise HTTPException(
             status_code=404,

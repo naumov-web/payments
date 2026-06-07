@@ -15,18 +15,9 @@ async def main():
         "kafka:9092",
     )
 
-    producer = KafkaProducerAdapter(
-        bootstrap_servers=(
-            bootstrap_servers
-        ),
-    )
-
-    worker = OutboxPublisherWorker(
-        producer=producer,
-    )
-
+    producer = KafkaProducerAdapter(bootstrap_servers=bootstrap_servers)
+    worker = OutboxPublisherWorker(producer=producer)
     await worker.run()
-
 
 if __name__ == "__main__":
     asyncio.run(main())
