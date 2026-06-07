@@ -3,9 +3,7 @@ from decimal import Decimal
 from uuid import UUID
 
 from app.domain.events.base import DomainEvent
-from app.domain.transactions.entities import (
-    LedgerEntry,
-)
+from app.domain.transactions.entities import LedgerEntry
 
 @dataclass(slots=True, kw_only=True)
 class MoneyGranted(DomainEvent):

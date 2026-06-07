@@ -6,14 +6,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.domain.events.base import DomainEvent
 from app.infrastructure.database.models.event import EventModel
-from app.infrastructure.event_store.mapper import (
-    map_domain_event_to_model,
-)
-
+from app.infrastructure.event_store.mapper import map_domain_event_to_model
 
 class ConcurrencyConflictError(Exception):
     pass
-
 
 class EventStore:
     def __init__(self, session: AsyncSession):

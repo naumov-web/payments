@@ -15,10 +15,7 @@ from app.infrastructure.event_store.store import (
 class TransactionAggregateRepository:
     AGGREGATE_TYPE = "TRANSACTION"
 
-    def __init__(
-        self,
-        event_store: EventStore,
-    ):
+    def __init__(self, event_store: EventStore):
         self._event_store = event_store
 
     async def load(
@@ -26,32 +23,21 @@ class TransactionAggregateRepository:
         aggregate_id: UUID,
     ) -> TransactionAggregate:
         aggregate = TransactionAggregate()
-
-        models = await self._event_store.load_events(
-            aggregate_id,
-        )
+        models = await self._event_store.load_events(aggregate_id)
 
         for model in models:
-            event = map_model_to_domain_event(
-                model,
-            )
-
+            event = map_model_to_domain_event(model)
             aggregate.apply(event)
 
         return aggregate
 
-    async def save(
-        self,
-        aggregate: TransactionAggregate,
-    ) -> list[DomainEvent]:
+    async def save(self, aggregate: TransactionAggregate) -> list[DomainEvent]:
         events = aggregate.pull_events()
 
         if not events:
             return []
 
-        expected_version = (
-            aggregate.version
-        )
+        expected_version = (aggregate.version)
 
         await self._event_store.append_events(
             aggregate_id=aggregate.id,

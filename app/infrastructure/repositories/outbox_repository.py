@@ -35,27 +35,17 @@ class OutboxRepository:
         query = (
             select(OutboxMessageModel)
             .where(
-                OutboxMessageModel.status
-                == "PENDING"
+                OutboxMessageModel.status == "PENDING"
             )
-            .order_by(
-                OutboxMessageModel.created_at.asc()
-            )
+            .order_by(OutboxMessageModel.created_at.asc())
             .limit(limit)
         )
 
-        result = await self._session.execute(
-            query,
-        )
+        result = await self._session.execute(query)
 
-        return list(
-            result.scalars().all()
-        )
+        return list(result.scalars().all())
 
-    async def mark_processed(
-        self,
-        message_id: UUID,
-    ) -> None:
+    async def mark_processed(self, message_id: UUID) -> None:
         message = await self._session.get(
             OutboxMessageModel,
             message_id,
@@ -66,14 +56,9 @@ class OutboxRepository:
 
         message.status = "PROCESSED"
 
-        message.processed_at = (
-            datetime.utcnow()
-        )
+        message.processed_at = datetime.utcnow()
 
-    async def mark_failed(
-        self,
-        message_id: UUID,
-    ) -> None:
+    async def mark_failed(self, message_id: UUID) -> None:
         message = await self._session.get(
             OutboxMessageModel,
             message_id,

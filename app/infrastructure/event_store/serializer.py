@@ -2,7 +2,6 @@ from dataclasses import asdict, is_dataclass
 from datetime import datetime
 from uuid import UUID
 
-
 def serialize_value(value):
     if isinstance(value, UUID):
         return str(value)

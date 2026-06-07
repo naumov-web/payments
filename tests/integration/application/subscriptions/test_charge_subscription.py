@@ -12,37 +12,20 @@ from app.application.subscriptions.charge_subscription import (
     SubscriptionAlreadyBilledError,
     SubscriptionNotFoundError
 )
-from app.domain.subscriptions.billing_period import (
-    BillingPeriod,
-)
-from app.domain.subscriptions.billing_status import (
-    BillingStatus,
-)
-from app.domain.subscriptions.subscription_status import (
-    SubscriptionStatus,
-)
-from app.infrastructure.database.models.actor import (
-    ActorModel,
-)
-from app.infrastructure.database.models.subscription import (
-    SubscriptionModel,
-)
-from app.infrastructure.database.models.subscription_billing import (
-    SubscriptionBillingModel,
-)
+from app.domain.subscriptions.billing_period import BillingPeriod
+from app.domain.subscriptions.billing_status import BillingStatus
+from app.domain.subscriptions.subscription_status import SubscriptionStatus
+from app.infrastructure.database.models.actor import ActorModel
+from app.infrastructure.database.models.subscription import SubscriptionModel
+from app.infrastructure.database.models.subscription_billing import SubscriptionBillingModel
 
 @pytest.mark.asyncio
-async def test_charge_subscription_success(
-    uow,
-):
+async def test_charge_subscription_success(uow):
     subscriber_id = uuid4()
     service_id = uuid4()
     subscription_id = uuid4()
 
-    billing_date = (
-        datetime.now(UTC)
-        - timedelta(days=1)
-    )
+    billing_date = datetime.now(UTC) - timedelta(days=1)
 
     async with uow as tx:
         tx.session.add(
@@ -82,83 +65,40 @@ async def test_charge_subscription_success(
             )
         )
 
-    use_case = ChargeSubscriptionUseCase(
-        uow=uow,
-    )
+    use_case = ChargeSubscriptionUseCase(uow=uow)
 
-    await use_case.execute(
-        subscription_id=subscription_id,
-    )
+    await use_case.execute(subscription_id=subscription_id)
 
     async with uow as tx:
-        subscription = (
-            await tx.subscriptions.get_by_id(
-                subscription_id,
-            )
-        )
+        subscription = await tx.subscriptions.get_by_id(subscription_id)
 
         assert subscription is not None
+        assert subscription.status == SubscriptionStatus.ACTIVE.value
+        assert subscription.retry_after is None
+        assert subscription.next_billing_at > billing_date
 
-        assert (
-            subscription.status
-            == SubscriptionStatus.ACTIVE.value
-        )
-
-        assert (
-            subscription.retry_after
-            is None
-        )
-
-        assert (
-            subscription.next_billing_at
-            > billing_date
-        )
-
-        billing = (
-            await tx.subscription_billing
-            .get_by_subscription_and_date(
-                subscription_id=subscription_id,
-                billing_date=billing_date,
-            )
+        billing = await tx.subscription_billing.get_by_subscription_and_date(
+            subscription_id=subscription_id,
+            billing_date=billing_date,
         )
 
         assert billing is not None
-
         assert billing.transaction_id is not None
+        assert billing.status == BillingStatus.SUCCESS.value
 
-        assert (
-            billing.status
-            == BillingStatus.SUCCESS.value
-        )
-
-        subscriber_balance = (
-            await tx.wallet_balances.get_balance(
-                subscriber_id,
-            )
-        )
-
-        service_balance = (
-            await tx.wallet_balances.get_balance(
-                service_id,
-            )
-        )
+        subscriber_balance = await tx.wallet_balances.get_balance(subscriber_id)
+        service_balance = await tx.wallet_balances.get_balance(service_id)
 
         assert subscriber_balance == 9_000
-
         assert service_balance == 1_000
 
 @pytest.mark.asyncio
-async def test_charge_subscription_insufficient_funds(
-    uow,
-):
+async def test_charge_subscription_insufficient_funds(uow):
     subscriber_id = uuid4()
     service_id = uuid4()
     subscription_id = uuid4()
 
-    billing_date = (
-        datetime.now(UTC)
-        - timedelta(days=1)
-    )
+    billing_date = datetime.now(UTC) - timedelta(days=1)
 
     async with uow as tx:
         tx.session.add(
@@ -198,80 +138,37 @@ async def test_charge_subscription_insufficient_funds(
             )
         )
 
-    use_case = ChargeSubscriptionUseCase(
-        uow=uow,
-    )
-
-    await use_case.execute(
-        subscription_id=subscription_id,
-    )
+    use_case = ChargeSubscriptionUseCase(uow=uow)
+    await use_case.execute(subscription_id=subscription_id)
 
     async with uow as tx:
-        subscription = (
-            await tx.subscriptions.get_by_id(
-                subscription_id,
-            )
-        )
+        subscription = await tx.subscriptions.get_by_id(subscription_id)
 
         assert subscription is not None
+        assert subscription.status == SubscriptionStatus.PAST_DUE.value
+        assert subscription.retry_after is not None
+        assert subscription.next_billing_at == billing_date
 
-        assert (
-            subscription.status
-            == SubscriptionStatus.PAST_DUE.value
-        )
-
-        assert (
-            subscription.retry_after
-            is not None
-        )
-
-        assert (
-            subscription.next_billing_at
-            == billing_date
-        )
-
-        billing = (
-            await tx.subscription_billing
-            .get_by_subscription_and_date(
-                subscription_id=subscription_id,
-                billing_date=billing_date,
-            )
+        billing = await tx.subscription_billing.get_by_subscription_and_date(
+            subscription_id=subscription_id,
+            billing_date=billing_date,
         )
 
         assert billing is not None
+        assert billing.status == BillingStatus.FAILED.value
 
-        assert (
-            billing.status
-            == BillingStatus.FAILED.value
-        )
-
-        subscriber_balance = (
-            await tx.wallet_balances.get_balance(
-                subscriber_id,
-            )
-        )
-
-        service_balance = (
-            await tx.wallet_balances.get_balance(
-                service_id,
-            )
-        )
+        subscriber_balance = await tx.wallet_balances.get_balance(subscriber_id)
+        service_balance = await tx.wallet_balances.get_balance(service_id)
 
         assert subscriber_balance == 500
         assert service_balance == 0
 
 @pytest.mark.asyncio
-async def test_charge_subscription_already_billed(
-    uow,
-):
+async def test_charge_subscription_already_billed(uow):
     subscriber_id = uuid4()
     service_id = uuid4()
     subscription_id = uuid4()
-
-    billing_date = (
-        datetime.now(UTC)
-        - timedelta(days=1)
-    )
+    billing_date = datetime.now(UTC) - timedelta(days=1)
 
     async with uow as tx:
         tx.session.add(
@@ -321,53 +218,29 @@ async def test_charge_subscription_already_billed(
             )
         )
 
-    use_case = ChargeSubscriptionUseCase(
-        uow=uow,
-    )
+    use_case = ChargeSubscriptionUseCase(uow=uow)
 
-    with pytest.raises(
-        SubscriptionAlreadyBilledError,
-    ):
-        await use_case.execute(
-            subscription_id=subscription_id,
-        )
+    with pytest.raises(SubscriptionAlreadyBilledError):
+        await use_case.execute(subscription_id=subscription_id)
 
     async with uow as tx:
-        subscriber_balance = (
-            await tx.wallet_balances.get_balance(
-                subscriber_id,
-            )
-        )
-
-        service_balance = (
-            await tx.wallet_balances.get_balance(
-                service_id,
-            )
-        )
+        subscriber_balance = await tx.wallet_balances.get_balance(subscriber_id)
+        service_balance = await tx.wallet_balances.get_balance(service_id)
 
         assert subscriber_balance == 10_000
         assert service_balance == 0
 
-        billing = (
-            await tx.subscription_billing
-            .get_by_subscription_and_date(
-                subscription_id=subscription_id,
-                billing_date=billing_date,
-            )
+        billing = await tx.subscription_billing.get_by_subscription_and_date(
+            subscription_id=subscription_id,
+            billing_date=billing_date,
         )
 
         assert billing is not None
-
-        assert (
-            billing.status
-            == BillingStatus.SUCCESS.value
-        )
+        assert billing.status == BillingStatus.SUCCESS.value
 
 @pytest.mark.asyncio
 async def test_charge_subscription_not_found(uow):
     use_case = ChargeSubscriptionUseCase(uow=uow)
 
     with pytest.raises(SubscriptionNotFoundError):
-        await use_case.execute(
-            subscription_id=uuid4(),
-        )
+        await use_case.execute(subscription_id=uuid4())

@@ -7,47 +7,23 @@ from fastapi import status
 
 from app.application.transactions.refund_transfer import (
     IdempotencyConflictError as RefundIdempotencyConflictError,
-)
-from app.application.transactions.refund_transfer import (
     InsufficientFundsError as RefundInsufficientFundsError,
-)
-from app.application.transactions.refund_transfer import (
     RefundAlreadyExistsError,
-)
-from app.application.transactions.refund_transfer import (
     RefundNotAllowedError,
-)
-from app.application.transactions.refund_transfer import (
     RefundTransferUseCase,
-)
-from app.application.transactions.refund_transfer import (
     RefundWindowExpiredError,
-)
-from app.application.transactions.refund_transfer import (
     TransactionNotFoundError,
 )
 from app.application.transactions.transfer import (
     ActorNotFoundError,
-)
-from app.application.transactions.transfer import (
     IdempotencyConflictError,
-)
-from app.application.transactions.transfer import (
     InsufficientFundsError,
-)
-from app.application.transactions.transfer import (
     InvalidTransferError,
-)
-from app.application.transactions.transfer import (
     TransferUseCase,
 )
-from app.infrastructure.unit_of_work import (
-    UnitOfWork,
-)
+from app.infrastructure.unit_of_work import UnitOfWork
 from app.interfaces.http.schemas.transfer import (
     CreateTransferRequest,
-)
-from app.interfaces.http.schemas.transfer import (
     CreateTransferResponse,
 )
 
@@ -69,22 +45,15 @@ async def create_transfer(
         alias="Idempotency-Key",
     ),
 ):
-    use_case = TransferUseCase(
-        uow=UnitOfWork(),
-    )
+    use_case = TransferUseCase(uow=UnitOfWork())
 
     try:
         result = await use_case.execute(
-            sender_actor_id=(
-                request.sender_actor_id
-            ),
-            receiver_actor_id=(
-                request.receiver_actor_id
-            ),
+            sender_actor_id=request.sender_actor_id,
+            receiver_actor_id=request.receiver_actor_id,
             amount=request.amount,
             idempotency_key=idempotency_key,
         )
-
     except ActorNotFoundError as exc:
         raise HTTPException(
             status_code=404,
@@ -110,9 +79,7 @@ async def create_transfer(
         )
 
     return CreateTransferResponse(
-        transaction_id=result[
-            "transaction_id"
-        ]
+        transaction_id=result["transaction_id"]
     )
 
 @router.patch(
@@ -128,9 +95,7 @@ async def refund_transfer(
         alias="Idempotency-Key",
     ),
 ):
-    use_case = RefundTransferUseCase(
-        uow=UnitOfWork(),
-    )
+    use_case = RefundTransferUseCase(uow=UnitOfWork())
 
     try:
         result = await use_case.execute(
@@ -175,7 +140,5 @@ async def refund_transfer(
         )
 
     return CreateTransferResponse(
-        transaction_id=UUID(
-            result["transaction_id"]
-        )
+        transaction_id=UUID(result["transaction_id"])
     )

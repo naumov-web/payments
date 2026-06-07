@@ -9,12 +9,8 @@ def build_transfer_request_hash(
     amount: int,
 ) -> str:
     payload = {
-        "sender_actor_id": str(
-            sender_actor_id
-        ),
-        "receiver_actor_id": str(
-            receiver_actor_id
-        ),
+        "sender_actor_id": str(sender_actor_id),
+        "receiver_actor_id": str(receiver_actor_id),
         "amount": amount,
     }
 
@@ -24,6 +20,4 @@ def build_transfer_request_hash(
         separators=(",", ":"),
     )
 
-    return hashlib.sha256(
-        serialized.encode("utf-8")
-    ).hexdigest()
+    return hashlib.sha256(serialized.encode("utf-8")).hexdigest()

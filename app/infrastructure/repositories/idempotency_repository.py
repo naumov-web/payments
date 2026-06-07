@@ -7,26 +7,16 @@ from app.infrastructure.database.models.idempotency_key import (
 
 
 class IdempotencyRepository:
-    def __init__(
-        self,
-        session: AsyncSession,
-    ):
+    def __init__(self,session: AsyncSession):
         self._session = session
 
-    async def get_by_key(
-        self,
-        idempotency_key: str,
-    ) -> IdempotencyKeyModel | None:
-        query = select(
-            IdempotencyKeyModel
-        ).where(
-            IdempotencyKeyModel.idempotency_key
-            == idempotency_key
+    async def get_by_key(self, idempotency_key: str) -> IdempotencyKeyModel | None:
+        query = (
+            select(IdempotencyKeyModel)
+            .where(IdempotencyKeyModel.idempotency_key == idempotency_key)
         )
 
-        result = await self._session.execute(
-            query,
-        )
+        result = await self._session.execute(query)
 
         return result.scalar_one_or_none()
 

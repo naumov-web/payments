@@ -21,16 +21,10 @@ class WalletBalanceRepository:
     ) -> int:
         query = (
             select(WalletBalanceModel)
-            .where(
-                WalletBalanceModel.actor_id
-                == actor_id
-            )
+            .where(WalletBalanceModel.actor_id == actor_id)
         )
 
-        result = await self._session.execute(
-            query,
-        )
-
+        result = await self._session.execute(query)
         model = result.scalar_one_or_none()
 
         if model is None:
@@ -44,10 +38,7 @@ class WalletBalanceRepository:
         actor_id: UUID,
         balance: int,
     ) -> None:
-        model = await self._session.get(
-            WalletBalanceModel,
-            actor_id,
-        )
+        model = await self._session.get(WalletBalanceModel, actor_id)
 
         if model is None:
             model = WalletBalanceModel(

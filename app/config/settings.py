@@ -7,10 +7,7 @@ from pydantic_settings import (
 
 
 class Settings(BaseSettings):
-    app_name: str = (
-        "internal-wallet-service"
-    )
-
+    app_name: str = "internal-wallet-service"
     postgres_dsn: str
     redis_url: str
     kafka_bootstrap_servers: str

@@ -1,22 +1,11 @@
 from uuid import UUID
 
 from app.domain.events.base import DomainEvent
-from app.domain.events.transaction import (
-    TransactionCreated,
-)
-from app.domain.transactions.entities import (
-    LedgerEntry,
-)
-from app.infrastructure.database.models.event import (
-    EventModel,
-)
-from app.infrastructure.event_store.registry import (
-    EVENT_REGISTRY,
-)
-from app.infrastructure.event_store.serializer import (
-    serialize_value,
-)
-
+from app.domain.events.transaction import TransactionCreated
+from app.domain.transactions.entities import LedgerEntry
+from app.infrastructure.database.models.event import EventModel
+from app.infrastructure.event_store.registry import EVENT_REGISTRY
+from app.infrastructure.event_store.serializer import serialize_value
 
 def map_domain_event_to_model(
     event: DomainEvent,
@@ -44,17 +33,11 @@ def map_domain_event_to_model(
     )
 
 
-def map_model_to_domain_event(
-    model: EventModel,
-) -> DomainEvent:
-    event_class = EVENT_REGISTRY.get(
-        model.event_type,
-    )
+def map_model_to_domain_event(model: EventModel) -> DomainEvent:
+    event_class = EVENT_REGISTRY.get(model.event_type)
 
     if event_class is None:
-        raise ValueError(
-            f"Unknown event type: {model.event_type}"
-        )
+        raise ValueError(f"Unknown event type: {model.event_type}")
 
     payload = dict(model.payload)
 
@@ -67,18 +50,12 @@ def map_model_to_domain_event(
             for entry in payload["entries"]
         ]
 
-        reference_transaction_id = (
-            payload.get(
-                "reference_transaction_id"
-            )
+        reference_transaction_id = payload.get(
+            "reference_transaction_id"
         )
 
         if reference_transaction_id is not None:
-            payload[
-                "reference_transaction_id"
-            ] = UUID(
-                reference_transaction_id
-            )
+            payload["reference_transaction_id"] = UUID(reference_transaction_id)
 
     return event_class(
         aggregate_id=model.aggregate_id,

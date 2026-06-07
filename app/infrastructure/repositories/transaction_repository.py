@@ -19,9 +19,7 @@ class TransactionRepository:
         sender_actor_id: UUID,
         receiver_actor_id: UUID,
         amount: int,
-        reference_transaction_id: (
-            UUID | None
-        ),
+        reference_transaction_id: UUID | None,
         created_at,
     ) -> None:
         model = TransactionModel(
@@ -30,9 +28,7 @@ class TransactionRepository:
             sender_actor_id=sender_actor_id,
             receiver_actor_id=receiver_actor_id,
             amount=amount,
-            reference_transaction_id=(
-                reference_transaction_id
-            ),
+            reference_transaction_id=reference_transaction_id,
             created_at=created_at,
         )
 

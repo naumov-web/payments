@@ -6,13 +6,8 @@ from uuid import UUID, uuid4
 @dataclass(slots=True, kw_only=True)
 class DomainEvent:
     aggregate_id: UUID
-
     event_id: UUID = field(default_factory=uuid4)
-
-    occurred_at: datetime = field(
-        default_factory=lambda: datetime.now(UTC),
-    )
-
+    occurred_at: datetime = field(default_factory=lambda: datetime.now(UTC))
     event_version: int = 1
 
     @property
