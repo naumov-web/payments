@@ -7,30 +7,16 @@ from uuid import uuid4
 
 import pytest
 
-from app.domain.subscriptions.billing_period import (
-    BillingPeriod,
-)
-from app.domain.subscriptions.subscription_status import (
-    SubscriptionStatus,
-)
-from app.infrastructure.database.models.actor import (
-    ActorModel,
-)
-from app.infrastructure.database.models.subscription import (
-    SubscriptionModel,
-)
-from app.workers.subscription_billing_worker import (
-    SubscriptionBillingWorker,
-)
+from app.domain.subscriptions.billing_period import BillingPeriod
+from app.domain.subscriptions.subscription_status import SubscriptionStatus
+from app.infrastructure.database.models.actor import ActorModel
+from app.infrastructure.database.models.subscription import SubscriptionModel
+from app.workers.subscription_billing_worker import SubscriptionBillingWorker
 
 class FakeChargeSubscriptionUseCase:
     called_subscription_ids = []
 
-    def __init__(
-        self,
-        *,
-        uow,
-    ):
+    def __init__(self, *, uow):
         pass
 
     async def execute(
@@ -38,9 +24,7 @@ class FakeChargeSubscriptionUseCase:
         *,
         subscription_id,
     ):
-        self.called_subscription_ids.append(
-            subscription_id,
-        )
+        self.called_subscription_ids.append(subscription_id)
 
         return {
             "status": "success",
@@ -48,9 +32,7 @@ class FakeChargeSubscriptionUseCase:
 
 
 @pytest.mark.asyncio
-async def test_subscription_billing_worker_processes_due_subscription(
-    uow,
-):
+async def test_subscription_billing_worker_processes_due_subscription(uow):
     subscriber_id = uuid4()
     service_id = uuid4()
     subscription_id = uuid4()
@@ -90,42 +72,26 @@ async def test_subscription_billing_worker_processes_due_subscription(
 
     worker = SubscriptionBillingWorker(
         uow_factory=lambda: uow,
-        charge_subscription_use_case_factory=(
-            FakeChargeSubscriptionUseCase
-        ),
+        charge_subscription_use_case_factory=FakeChargeSubscriptionUseCase
     )
 
     await worker._process_batch()
-
-    assert (
-        FakeChargeSubscriptionUseCase.called_subscription_ids
-        == [subscription_id]
-    )
+    assert FakeChargeSubscriptionUseCase.called_subscription_ids == [subscription_id]
 
 @pytest.mark.asyncio
-async def test_subscription_billing_worker_skips_when_no_due_subscriptions(
-    uow,
-):
+async def test_subscription_billing_worker_skips_when_no_due_subscriptions(uow):
     FakeChargeSubscriptionUseCase.called_subscription_ids.clear()
 
     worker = SubscriptionBillingWorker(
         uow_factory=lambda: uow,
-        charge_subscription_use_case_factory=(
-            FakeChargeSubscriptionUseCase
-        ),
+        charge_subscription_use_case_factory=FakeChargeSubscriptionUseCase,
     )
 
     await worker._process_batch()
-
-    assert (
-        FakeChargeSubscriptionUseCase.called_subscription_ids
-        == []
-    )
+    assert FakeChargeSubscriptionUseCase.called_subscription_ids == []
 
 @pytest.mark.asyncio
-async def test_subscription_billing_worker_processes_multiple_due_subscriptions(
-    uow,
-):
+async def test_subscription_billing_worker_processes_multiple_due_subscriptions(uow):
     FakeChargeSubscriptionUseCase.called_subscription_ids.clear()
 
     subscriber_1 = uuid4()
@@ -178,10 +144,7 @@ async def test_subscription_billing_worker_processes_multiple_due_subscriptions(
                 amount=1000,
                 billing_period=BillingPeriod.MONTHLY.value,
                 status=SubscriptionStatus.ACTIVE.value,
-                next_billing_at=(
-                    datetime.now(UTC)
-                    - timedelta(days=1)
-                ),
+                next_billing_at=datetime.now(UTC) - timedelta(days=1),
                 retry_after=None,
             )
         )
@@ -194,10 +157,7 @@ async def test_subscription_billing_worker_processes_multiple_due_subscriptions(
                 amount=1000,
                 billing_period=BillingPeriod.MONTHLY.value,
                 status=SubscriptionStatus.ACTIVE.value,
-                next_billing_at=(
-                    datetime.now(UTC)
-                    - timedelta(days=1)
-                ),
+                next_billing_at=datetime.now(UTC) - timedelta(days=1),
                 retry_after=None,
             )
         )
@@ -210,19 +170,14 @@ async def test_subscription_billing_worker_processes_multiple_due_subscriptions(
                 amount=1000,
                 billing_period=BillingPeriod.MONTHLY.value,
                 status=SubscriptionStatus.ACTIVE.value,
-                next_billing_at=(
-                    datetime.now(UTC)
-                    - timedelta(days=1)
-                ),
+                next_billing_at=datetime.now(UTC) - timedelta(days=1),
                 retry_after=None,
             )
         )
 
     worker = SubscriptionBillingWorker(
         uow_factory=lambda: uow,
-        charge_subscription_use_case_factory=(
-            FakeChargeSubscriptionUseCase
-        ),
+        charge_subscription_use_case_factory=FakeChargeSubscriptionUseCase,
     )
 
     await worker._process_batch()
@@ -235,17 +190,10 @@ async def test_subscription_billing_worker_processes_multiple_due_subscriptions(
         subscription_3,
     }
 
-    assert (
-        len(
-            FakeChargeSubscriptionUseCase.called_subscription_ids
-        )
-        == 3
-    )
+    assert len(FakeChargeSubscriptionUseCase.called_subscription_ids) == 3
 
 @pytest.mark.asyncio
-async def test_subscription_billing_worker_ignores_insufficient_funds_error(
-    uow,
-):
+async def test_subscription_billing_worker_ignores_insufficient_funds_error(uow):
     subscriber_id = uuid4()
     service_id = uuid4()
     subscription_id = uuid4()
@@ -273,19 +221,14 @@ async def test_subscription_billing_worker_ignores_insufficient_funds_error(
                 amount=1000,
                 billing_period=BillingPeriod.MONTHLY.value,
                 status=SubscriptionStatus.ACTIVE.value,
-                next_billing_at=(
-                    datetime.now(UTC)
-                    - timedelta(days=1)
-                ),
+                next_billing_at=datetime.now(UTC) - timedelta(days=1),
                 retry_after=None,
             )
         )
 
     worker = SubscriptionBillingWorker(
         uow_factory=lambda: uow,
-        charge_subscription_use_case_factory=(
-            FakeChargeSubscriptionUseCase
-        ),
+        charge_subscription_use_case_factory=FakeChargeSubscriptionUseCase,
     )
 
     await worker._process_batch()

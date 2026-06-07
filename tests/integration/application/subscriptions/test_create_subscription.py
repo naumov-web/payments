@@ -17,21 +17,12 @@ from app.application.subscriptions.create_subscription import (
     InvalidSubscriptionError,
     ActorNotFoundError,
 )
-from app.domain.subscriptions.billing_period import (
-    BillingPeriod,
-)
-from app.domain.subscriptions.subscription_status import (
-    SubscriptionStatus,
-)
-from app.infrastructure.database.models.actor import (
-    ActorModel,
-)
-
+from app.domain.subscriptions.billing_period import BillingPeriod
+from app.domain.subscriptions.subscription_status import SubscriptionStatus
+from app.infrastructure.database.models.actor import ActorModel
 
 @pytest.mark.asyncio
-async def test_create_subscription_success(
-    uow,
-):
+async def test_create_subscription_success(uow):
     subscriber_id = uuid4()
     service_id = uuid4()
 
@@ -60,9 +51,7 @@ async def test_create_subscription_success(
             balance=0,
         )
 
-    use_case = CreateSubscriptionUseCase(
-        uow=uow,
-    )
+    use_case = CreateSubscriptionUseCase(uow=uow)
 
     result = await use_case.execute(
         subscriber_actor_id=subscriber_id,
@@ -75,57 +64,26 @@ async def test_create_subscription_success(
     assert result["transaction_id"]
 
     async with uow as tx:
-        subscription = (
-            await tx.subscriptions
-            .get_active_subscription(
-                subscriber_actor_id=subscriber_id,
-                service_actor_id=service_id,
-            )
+        subscription = await tx.subscriptions.get_active_subscription(
+            subscriber_actor_id=subscriber_id,
+            service_actor_id=service_id,
         )
 
         assert subscription is not None
-
-        assert (
-            subscription.subscriber_actor_id
-            == subscriber_id
-        )
-
-        assert (
-            subscription.service_actor_id
-            == service_id
-        )
-
+        assert subscription.subscriber_actor_id == subscriber_id
+        assert subscription.service_actor_id == service_id
         assert subscription.amount == 1_000
+        assert subscription.billing_period == BillingPeriod.MONTHLY
+        assert subscription.status == SubscriptionStatus.ACTIVE
 
-        assert (
-            subscription.billing_period
-            == BillingPeriod.MONTHLY
-        )
-
-        assert (
-            subscription.status
-            == SubscriptionStatus.ACTIVE
-        )
-
-        subscriber_balance = (
-            await tx.wallet_balances.get_balance(
-                subscriber_id,
-            )
-        )
-
-        service_balance = (
-            await tx.wallet_balances.get_balance(
-                service_id,
-            )
-        )
+        subscriber_balance = await tx.wallet_balances.get_balance(subscriber_id)
+        service_balance = await tx.wallet_balances.get_balance(service_id)
 
         assert subscriber_balance == 9_000
         assert service_balance == 1_000
 
 @pytest.mark.asyncio
-async def test_create_subscription_insufficient_funds(
-    uow,
-):
+async def test_create_subscription_insufficient_funds(uow):
     subscriber_id = uuid4()
     service_id = uuid4()
 
@@ -154,9 +112,7 @@ async def test_create_subscription_insufficient_funds(
             balance=0,
         )
 
-    use_case = CreateSubscriptionUseCase(
-        uow=uow,
-    )
+    use_case = CreateSubscriptionUseCase(uow=uow)
 
     with pytest.raises(
         InsufficientFundsError,
@@ -170,35 +126,21 @@ async def test_create_subscription_insufficient_funds(
         )
 
     async with uow as tx:
-        subscription = (
-            await tx.subscriptions
-            .get_active_subscription(
-                subscriber_actor_id=subscriber_id,
-                service_actor_id=service_id,
-            )
+        subscription = await tx.subscriptions.get_active_subscription(
+            subscriber_actor_id=subscriber_id,
+            service_actor_id=service_id,
         )
 
         assert subscription is None
 
-        subscriber_balance = (
-            await tx.wallet_balances.get_balance(
-                subscriber_id,
-            )
-        )
-
-        service_balance = (
-            await tx.wallet_balances.get_balance(
-                service_id,
-            )
-        )
+        subscriber_balance = await tx.wallet_balances.get_balance(subscriber_id)
+        service_balance = await tx.wallet_balances.get_balance(service_id)
 
         assert subscriber_balance == 500
         assert service_balance == 0
 
 @pytest.mark.asyncio
-async def test_create_subscription_already_exists(
-    uow,
-):
+async def test_create_subscription_already_exists(uow):
     subscriber_id = uuid4()
     service_id = uuid4()
 
@@ -235,17 +177,12 @@ async def test_create_subscription_already_exists(
                 amount=1_000,
                 billing_period=BillingPeriod.MONTHLY,
                 status=SubscriptionStatus.ACTIVE,
-                next_billing_at=(
-                    datetime.now(UTC)
-                    + timedelta(days=30)
-                ),
+                next_billing_at=datetime.now(UTC) + timedelta(days=30),
                 retry_after=None,
             )
         )
 
-    use_case = CreateSubscriptionUseCase(
-        uow=uow,
-    )
+    use_case = CreateSubscriptionUseCase(uow=uow)
 
     with pytest.raises(
         SubscriptionAlreadyExistsError,
@@ -259,35 +196,21 @@ async def test_create_subscription_already_exists(
         )
 
     async with uow as tx:
-        subscription = (
-            await tx.subscriptions
-            .get_active_subscription(
-                subscriber_actor_id=subscriber_id,
-                service_actor_id=service_id,
-            )
+        subscription = await tx.subscriptions.get_active_subscription(
+            subscriber_actor_id=subscriber_id,
+            service_actor_id=service_id,
         )
 
         assert subscription is not None
 
-        subscriber_balance = (
-            await tx.wallet_balances.get_balance(
-                subscriber_id,
-            )
-        )
-
-        service_balance = (
-            await tx.wallet_balances.get_balance(
-                service_id,
-            )
-        )
+        subscriber_balance = await tx.wallet_balances.get_balance(subscriber_id)
+        service_balance = await tx.wallet_balances.get_balance(service_id)
 
         assert subscriber_balance == 10_000
         assert service_balance == 0
 
 @pytest.mark.asyncio
-async def test_create_subscription_invalid_amount(
-    uow,
-):
+async def test_create_subscription_invalid_amount(uow):
     subscriber_id = uuid4()
     service_id = uuid4()
 
@@ -316,9 +239,7 @@ async def test_create_subscription_invalid_amount(
             balance=0,
         )
 
-    use_case = CreateSubscriptionUseCase(
-        uow=uow,
-    )
+    use_case = CreateSubscriptionUseCase(uow=uow)
 
     with pytest.raises(
         InvalidSubscriptionError,
@@ -332,35 +253,21 @@ async def test_create_subscription_invalid_amount(
         )
 
     async with uow as tx:
-        subscription = (
-            await tx.subscriptions
-            .get_active_subscription(
-                subscriber_actor_id=subscriber_id,
-                service_actor_id=service_id,
-            )
+        subscription = await tx.subscriptions.get_active_subscription(
+            subscriber_actor_id=subscriber_id,
+            service_actor_id=service_id,
         )
 
         assert subscription is None
 
-        subscriber_balance = (
-            await tx.wallet_balances.get_balance(
-                subscriber_id,
-            )
-        )
-
-        service_balance = (
-            await tx.wallet_balances.get_balance(
-                service_id,
-            )
-        )
+        subscriber_balance = await tx.wallet_balances.get_balance(subscriber_id)
+        service_balance = await tx.wallet_balances.get_balance(service_id)
 
         assert subscriber_balance == 10_000
         assert service_balance == 0
 
 @pytest.mark.asyncio
-async def test_create_subscription_subscriber_not_found(
-    uow,
-):
+async def test_create_subscription_subscriber_not_found(uow):
     service_id = uuid4()
     missing_subscriber_id = uuid4()
 
@@ -372,9 +279,7 @@ async def test_create_subscription_subscriber_not_found(
             )
         )
 
-    use_case = CreateSubscriptionUseCase(
-        uow=uow,
-    )
+    use_case = CreateSubscriptionUseCase(uow=uow)
 
     with pytest.raises(
         ActorNotFoundError,
@@ -388,28 +293,19 @@ async def test_create_subscription_subscriber_not_found(
         )
 
     async with uow as tx:
-        subscription = (
-            await tx.subscriptions
-            .get_active_subscription(
-                subscriber_actor_id=missing_subscriber_id,
-                service_actor_id=service_id,
-            )
+        subscription = await tx.subscriptions.get_active_subscription(
+            subscriber_actor_id=missing_subscriber_id,
+            service_actor_id=service_id,
         )
 
         assert subscription is None
 
-        service_balance = (
-            await tx.wallet_balances.get_balance(
-                service_id,
-            )
-        )
+        service_balance = await tx.wallet_balances.get_balance(service_id)
 
         assert service_balance == 0
 
 @pytest.mark.asyncio
-async def test_create_subscription_service_actor_not_found(
-    uow,
-):
+async def test_create_subscription_service_actor_not_found(uow):
     subscriber_id = uuid4()
     missing_service_id = uuid4()
 
@@ -426,9 +322,7 @@ async def test_create_subscription_service_actor_not_found(
             balance=10_000,
         )
 
-    use_case = CreateSubscriptionUseCase(
-        uow=uow,
-    )
+    use_case = CreateSubscriptionUseCase(uow=uow)
 
     with pytest.raises(
         ActorNotFoundError,
@@ -442,20 +336,13 @@ async def test_create_subscription_service_actor_not_found(
         )
 
     async with uow as tx:
-        subscription = (
-            await tx.subscriptions
-            .get_active_subscription(
-                subscriber_actor_id=subscriber_id,
-                service_actor_id=missing_service_id,
-            )
+        subscription = await tx.subscriptions.get_active_subscription(
+            subscriber_actor_id=subscriber_id,
+            service_actor_id=missing_service_id,
         )
 
         assert subscription is None
 
-        subscriber_balance = (
-            await tx.wallet_balances.get_balance(
-                subscriber_id,
-            )
-        )
+        subscriber_balance = await tx.wallet_balances.get_balance(subscriber_id)
 
         assert subscriber_balance == 10_000
