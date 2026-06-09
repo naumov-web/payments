@@ -9,6 +9,7 @@ from app.infrastructure.projections.wallet_balance_projection import WalletBalan
 from app.infrastructure.projections.ledger_projection import LedgerProjectionUpdater
 from app.infrastructure.projections.transaction_projection import TransactionProjectionUpdater
 from app.infrastructure.unit_of_work import UnitOfWork
+from app.domain.actors.actor_role import ActorRole
 
 class InsufficientFundsError(Exception):
     pass
@@ -27,7 +28,7 @@ class GrantWeeklyRewardsUseCase:
 
     async def execute(self) -> list[UUID]:
         async with self._uow as uow:
-            query = select(ActorModel).where(ActorModel.role == "EMPLOYEE")
+            query = select(ActorModel).where(ActorModel.role == ActorRole.EMPLOYEE)
             result = await uow.session.execute(query)
             employees = result.scalars().all()
             total_amount = len(employees) * self.REWARD_AMOUNT
