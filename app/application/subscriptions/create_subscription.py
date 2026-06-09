@@ -4,6 +4,7 @@ from datetime import timedelta
 from uuid import uuid4
 from sqlalchemy.exc import IntegrityError
 
+from app.domain.transactions.transaction_type import TransactionType
 from app.infrastructure.database.models.subscription import SubscriptionModel
 from app.infrastructure.unit_of_work import UnitOfWork
 from app.domain.transactions.aggregate import TransactionAggregate
@@ -64,7 +65,7 @@ class CreateSubscriptionUseCase:
                 source_actor_id=subscriber_actor_id,
                 target_actor_id=service_actor_id,
                 amount=amount,
-                transaction_type="SUBSCRIPTION_PAYMENT",
+                transaction_type=TransactionType.SUBSCRIPTION_PAYMENT,
             )
 
             events = await uow.transaction_aggregates.save(aggregate)

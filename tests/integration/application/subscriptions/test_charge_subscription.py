@@ -18,6 +18,7 @@ from app.domain.subscriptions.subscription_status import SubscriptionStatus
 from app.infrastructure.database.models.actor import ActorModel
 from app.infrastructure.database.models.subscription import SubscriptionModel
 from app.infrastructure.database.models.subscription_billing import SubscriptionBillingModel
+from app.domain.actors.actor_type import ActorType
 
 @pytest.mark.asyncio
 async def test_charge_subscription_success(uow):
@@ -31,14 +32,14 @@ async def test_charge_subscription_success(uow):
         tx.session.add(
             ActorModel(
                 actor_id=subscriber_id,
-                actor_type="USER",
+                actor_type=ActorType.USER,
             )
         )
 
         tx.session.add(
             ActorModel(
                 actor_id=service_id,
-                actor_type="SERVICE",
+                actor_type=ActorType.SERVICE,
             )
         )
 
@@ -104,14 +105,14 @@ async def test_charge_subscription_insufficient_funds(uow):
         tx.session.add(
             ActorModel(
                 actor_id=subscriber_id,
-                actor_type="USER",
+                actor_type=ActorType.USER,
             )
         )
 
         tx.session.add(
             ActorModel(
                 actor_id=service_id,
-                actor_type="SERVICE",
+                actor_type=ActorType.SERVICE,
             )
         )
 
@@ -174,14 +175,14 @@ async def test_charge_subscription_already_billed(uow):
         tx.session.add(
             ActorModel(
                 actor_id=subscriber_id,
-                actor_type="USER",
+                actor_type=ActorType.USER,
             )
         )
 
         tx.session.add(
             ActorModel(
                 actor_id=service_id,
-                actor_type="SERVICE",
+                actor_type=ActorType.SERVICE,
             )
         )
 

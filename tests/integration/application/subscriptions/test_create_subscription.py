@@ -8,6 +8,7 @@ from datetime import (
     timedelta,
 )
 
+from app.domain.actors.actor_type import ActorType
 from app.infrastructure.database.models.subscription import SubscriptionModel
 
 from app.application.subscriptions.create_subscription import (
@@ -30,14 +31,14 @@ async def test_create_subscription_success(uow):
         tx.session.add(
             ActorModel(
                 actor_id=subscriber_id,
-                actor_type="USER",
+                actor_type=ActorType.USER,
             )
         )
 
         tx.session.add(
             ActorModel(
                 actor_id=service_id,
-                actor_type="SERVICE",
+                actor_type=ActorType.SERVICE,
             )
         )
 
@@ -91,14 +92,14 @@ async def test_create_subscription_insufficient_funds(uow):
         tx.session.add(
             ActorModel(
                 actor_id=subscriber_id,
-                actor_type="USER",
+                actor_type=ActorType.USER,
             )
         )
 
         tx.session.add(
             ActorModel(
                 actor_id=service_id,
-                actor_type="SERVICE",
+                actor_type=ActorType.SERVICE,
             )
         )
 
@@ -148,14 +149,14 @@ async def test_create_subscription_already_exists(uow):
         tx.session.add(
             ActorModel(
                 actor_id=subscriber_id,
-                actor_type="USER",
+                actor_type=ActorType.USER,
             )
         )
 
         tx.session.add(
             ActorModel(
                 actor_id=service_id,
-                actor_type="SERVICE",
+                actor_type=ActorType.SERVICE,
             )
         )
 
@@ -218,14 +219,14 @@ async def test_create_subscription_invalid_amount(uow):
         tx.session.add(
             ActorModel(
                 actor_id=subscriber_id,
-                actor_type="USER",
+                actor_type=ActorType.USER,
             )
         )
 
         tx.session.add(
             ActorModel(
                 actor_id=service_id,
-                actor_type="SERVICE",
+                actor_type=ActorType.SERVICE,
             )
         )
 
@@ -275,7 +276,7 @@ async def test_create_subscription_subscriber_not_found(uow):
         tx.session.add(
             ActorModel(
                 actor_id=service_id,
-                actor_type="SERVICE",
+                actor_type=ActorType.SERVICE,
             )
         )
 
@@ -313,7 +314,7 @@ async def test_create_subscription_service_actor_not_found(uow):
         tx.session.add(
             ActorModel(
                 actor_id=subscriber_id,
-                actor_type="USER",
+                actor_type=ActorType.USER,
             )
         )
 

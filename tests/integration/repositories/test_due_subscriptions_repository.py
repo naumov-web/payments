@@ -11,6 +11,7 @@ from app.domain.subscriptions.billing_period import BillingPeriod
 from app.domain.subscriptions.subscription_status import SubscriptionStatus
 from app.infrastructure.database.models.actor import ActorModel
 from app.infrastructure.database.models.subscription import SubscriptionModel
+from app.domain.actors.actor_type import ActorType
 
 @pytest.mark.asyncio
 async def test_due_subscriptions_repository_returns_active_due_subscription(uow):
@@ -24,14 +25,14 @@ async def test_due_subscriptions_repository_returns_active_due_subscription(uow)
         tx.session.add(
             ActorModel(
                 actor_id=subscriber_id,
-                actor_type="USER",
+                actor_type=ActorType.USER,
             )
         )
 
         tx.session.add(
             ActorModel(
                 actor_id=service_id,
-                actor_type="SERVICE",
+                actor_type=ActorType.SERVICE,
             )
         )
 
@@ -69,14 +70,14 @@ async def test_due_subscriptions_repository_skips_future_subscription(uow):
         tx.session.add(
             ActorModel(
                 actor_id=subscriber_id,
-                actor_type="USER",
+                actor_type=ActorType.USER,
             )
         )
 
         tx.session.add(
             ActorModel(
                 actor_id=service_id,
-                actor_type="SERVICE",
+                actor_type=ActorType.SERVICE,
             )
         )
 
@@ -113,14 +114,14 @@ async def test_due_subscriptions_repository_returns_past_due_with_expired_retry(
         tx.session.add(
             ActorModel(
                 actor_id=subscriber_id,
-                actor_type="USER",
+                actor_type=ActorType.USER,
             )
         )
 
         tx.session.add(
             ActorModel(
                 actor_id=service_id,
-                actor_type="SERVICE",
+                actor_type=ActorType.SERVICE,
             )
         )
 
@@ -158,14 +159,14 @@ async def test_due_subscriptions_repository_skips_past_due_with_future_retry(uow
         tx.session.add(
             ActorModel(
                 actor_id=subscriber_id,
-                actor_type="USER",
+                actor_type=ActorType.USER,
             )
         )
 
         tx.session.add(
             ActorModel(
                 actor_id=service_id,
-                actor_type="SERVICE",
+                actor_type=ActorType.SERVICE,
             )
         )
 
@@ -202,14 +203,14 @@ async def test_due_subscriptions_repository_skips_cancelled_subscription(uow):
         tx.session.add(
             ActorModel(
                 actor_id=subscriber_id,
-                actor_type="USER",
+                actor_type=ActorType.USER,
             )
         )
 
         tx.session.add(
             ActorModel(
                 actor_id=service_id,
-                actor_type="SERVICE",
+                actor_type=ActorType.SERVICE,
             )
         )
 

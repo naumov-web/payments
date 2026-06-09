@@ -2,6 +2,7 @@ from app.domain.events.base import DomainEvent
 from app.domain.events.transaction import TransactionCreated
 from app.domain.transactions.entities import LedgerEntry
 from app.domain.transactions.exceptions import UnbalancedTransactionError
+from app.domain.transactions.transaction_type import TransactionType
 
 class TransactionAggregate:
     def __init__(self):
@@ -46,7 +47,7 @@ class TransactionAggregate:
 
         event = TransactionCreated(
             aggregate_id=aggregate_id,
-            transaction_type="REWARD",
+            transaction_type=TransactionType.REWARD,
             entries=entries,
         )
 
@@ -62,7 +63,7 @@ class TransactionAggregate:
             source_actor_id,
             target_actor_id,
             amount: int,
-            transaction_type: str = "TRANSFER",
+            transaction_type: str = TransactionType.TRANSFER,
             reference_transaction_id=None,
     ) -> "TransactionAggregate":
         if amount <= 0:

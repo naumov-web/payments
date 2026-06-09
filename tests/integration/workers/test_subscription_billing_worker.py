@@ -12,6 +12,7 @@ from app.domain.subscriptions.subscription_status import SubscriptionStatus
 from app.infrastructure.database.models.actor import ActorModel
 from app.infrastructure.database.models.subscription import SubscriptionModel
 from app.workers.subscription_billing_worker import SubscriptionBillingWorker
+from app.domain.actors.actor_type import ActorType
 
 class FakeChargeSubscriptionUseCase:
     called_subscription_ids = []
@@ -43,14 +44,14 @@ async def test_subscription_billing_worker_processes_due_subscription(uow):
         tx.session.add(
             ActorModel(
                 actor_id=subscriber_id,
-                actor_type="USER",
+                actor_type=ActorType.USER,
             )
         )
 
         tx.session.add(
             ActorModel(
                 actor_id=service_id,
-                actor_type="SERVICE",
+                actor_type=ActorType.SERVICE,
             )
         )
 
@@ -111,27 +112,27 @@ async def test_subscription_billing_worker_processes_multiple_due_subscriptions(
             [
                 ActorModel(
                     actor_id=subscriber_1,
-                    actor_type="USER",
+                    actor_type=ActorType.USER,
                 ),
                 ActorModel(
                     actor_id=service_1,
-                    actor_type="SERVICE",
+                    actor_type=ActorType.SERVICE,
                 ),
                 ActorModel(
                     actor_id=subscriber_2,
-                    actor_type="USER",
+                    actor_type=ActorType.USER,
                 ),
                 ActorModel(
                     actor_id=service_2,
-                    actor_type="SERVICE",
+                    actor_type=ActorType.SERVICE,
                 ),
                 ActorModel(
                     actor_id=subscriber_3,
-                    actor_type="USER",
+                    actor_type=ActorType.USER,
                 ),
                 ActorModel(
                     actor_id=service_3,
-                    actor_type="SERVICE",
+                    actor_type=ActorType.SERVICE,
                 ),
             ]
         )
@@ -202,14 +203,14 @@ async def test_subscription_billing_worker_ignores_insufficient_funds_error(uow)
         tx.session.add(
             ActorModel(
                 actor_id=subscriber_id,
-                actor_type="USER",
+                actor_type=ActorType.USER,
             )
         )
 
         tx.session.add(
             ActorModel(
                 actor_id=service_id,
-                actor_type="SERVICE",
+                actor_type=ActorType.SERVICE,
             )
         )
 

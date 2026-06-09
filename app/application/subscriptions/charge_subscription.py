@@ -9,6 +9,7 @@ from app.domain.subscriptions.billing_period import BillingPeriod
 from app.domain.subscriptions.billing_status import BillingStatus
 from app.domain.subscriptions.subscription_status import SubscriptionStatus
 from app.domain.transactions.aggregate import TransactionAggregate
+from app.domain.transactions.transaction_type import TransactionType
 from app.infrastructure.database.models.subscription_billing import SubscriptionBillingModel
 from app.infrastructure.outbox.publisher import OutboxEventPublisher
 from app.infrastructure.projections.ledger_projection import LedgerProjectionUpdater
@@ -68,7 +69,7 @@ class ChargeSubscriptionUseCase:
                 source_actor_id=subscription.subscriber_actor_id,
                 target_actor_id=subscription.service_actor_id,
                 amount=subscription.amount,
-                transaction_type="SUBSCRIPTION_PAYMENT",
+                transaction_type=TransactionType.SUBSCRIPTION_PAYMENT,
             )
 
             events = await uow.transaction_aggregates.save(aggregate)
