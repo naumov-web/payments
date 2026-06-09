@@ -5,6 +5,8 @@ from uuid import uuid4
 from app.application.common.idempotency import build_transfer_request_hash
 from app.domain.events.transaction import TransactionCreated
 from app.domain.transactions.aggregate import TransactionAggregate
+from app.domain.idempotency.operation_type import OperationType
+from app.domain.transactions.transaction_type import TransactionType
 from app.infrastructure.event_store.mapper import map_model_to_domain_event
 from app.infrastructure.projections.ledger_projection import LedgerProjectionUpdater
 from app.infrastructure.projections.wallet_balance_projection import WalletBalanceProjectionUpdater
@@ -113,7 +115,7 @@ class RefundTransferUseCase:
                 source_actor_id=receiver_entry.actor_id,
                 target_actor_id=sender_entry.actor_id,
                 amount=amount,
-                transaction_type="TRANSFER_REFUND",
+                transaction_type=TransactionType.TRANSFER_REFUND,
                 reference_transaction_id=transaction_id,
             )
 
@@ -137,7 +139,7 @@ class RefundTransferUseCase:
 
             await uow.idempotency.save(
                 idempotency_key=idempotency_key,
-                operation_type="TRANSFER_REFUND",
+                operation_type=OperationType.TRANSFER_REFUND,
                 request_hash=request_hash,
                 response_payload=response_payload,
             )

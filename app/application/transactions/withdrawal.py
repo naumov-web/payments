@@ -3,6 +3,8 @@ from uuid import uuid4
 
 from app.application.common.idempotency import build_transfer_request_hash
 from app.domain.events.transaction import TransactionCreated
+from app.domain.idempotency.operation_type import OperationType
+from app.domain.transactions.transaction_type import TransactionType
 from app.domain.transactions.aggregate import TransactionAggregate
 from app.infrastructure.projections.ledger_projection import LedgerProjectionUpdater
 from app.infrastructure.projections.transaction_projection import TransactionProjectionUpdater
@@ -74,7 +76,7 @@ class WithdrawalUseCase:
                 source_actor_id=actor_id,
                 target_actor_id=WITHDRAWAL_SERVICE_ACTOR_ID,
                 amount=amount,
-                transaction_type="WITHDRAWAL",
+                transaction_type=TransactionType.WITHDRAWAL,
             )
 
             events = await uow.transaction_aggregates.save(aggregate)
@@ -97,7 +99,7 @@ class WithdrawalUseCase:
 
             await uow.idempotency.save(
                 idempotency_key=idempotency_key,
-                operation_type="WITHDRAWAL",
+                operation_type=OperationType.WITHDRAWAL,
                 request_hash=request_hash,
                 response_payload=response_payload,
             )

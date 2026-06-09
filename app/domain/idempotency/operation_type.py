@@ -1,0 +1,8 @@
+from enum import StrEnum
+
+class OperationType(StrEnum):
+    TRANSFER_REFUND = "TRANSFER_REFUND"
+    PURCHASE = "PURCHASE"
+    PURCHASE_REFUND = "PURCHASE_REFUND"
+    TRANSFER = "TRANSFER"
+    WITHDRAWAL = "WITHDRAWAL"

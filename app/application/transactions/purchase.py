@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from app.application.common.idempotency import build_transfer_request_hash
 from app.domain.events.transaction import TransactionCreated
+from app.domain.idempotency.operation_type import OperationType
 from app.domain.transactions.aggregate import TransactionAggregate
 from app.infrastructure.projections.ledger_projection import LedgerProjectionUpdater
 from app.infrastructure.projections.transaction_projection import TransactionProjectionUpdater
@@ -77,7 +78,7 @@ class PurchaseUseCase:
                 source_actor_id=buyer_actor_id,
                 target_actor_id=merchant_actor_id,
                 amount=amount,
-                transaction_type="PURCHASE",
+                transaction_type=TransactionType.PURCHASE,
             )
 
             events = await uow.transaction_aggregates.save(aggregate)
@@ -99,7 +100,7 @@ class PurchaseUseCase:
 
             await uow.idempotency.save(
                 idempotency_key=idempotency_key,
-                operation_type="PURCHASE",
+                operation_type=OperationType.PURCHASE,
                 request_hash=request_hash,
                 response_payload=response_payload,
             )

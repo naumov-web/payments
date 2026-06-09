@@ -1,6 +1,6 @@
 from app.domain.events.actor import ActorCreated
 from app.domain.events.base import DomainEvent
-
+from app.domain.actors.actor_role import ActorRole
 
 class ActorAggregate:
     def __init__(self):
@@ -25,7 +25,7 @@ class ActorAggregate:
         event = ActorCreated(
             aggregate_id=aggregate_id,
             actor_type="HUMAN",
-            role="ADMIN",
+            role=ActorRole.ADMIN,
             email=email,
             full_name=full_name,
         )
@@ -47,7 +47,7 @@ class ActorAggregate:
         event = ActorCreated(
             aggregate_id=aggregate_id,
             actor_type="HUMAN",
-            role="EMPLOYEE",
+            role=ActorRole.EMPLOYEE,
             email=email,
             full_name=full_name,
         )

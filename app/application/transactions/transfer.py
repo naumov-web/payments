@@ -3,6 +3,7 @@ from uuid import uuid4
 
 from app.application.common.idempotency import build_transfer_request_hash
 from app.domain.events.transaction import TransactionCreated
+from app.domain.idempotency.operation_type import OperationType
 from app.domain.transactions.aggregate import TransactionAggregate
 from app.infrastructure.projections.ledger_projection import LedgerProjectionUpdater
 from app.infrastructure.projections.wallet_balance_projection import WalletBalanceProjectionUpdater
@@ -99,7 +100,7 @@ class TransferUseCase:
 
             await uow.idempotency.save(
                 idempotency_key=idempotency_key,
-                operation_type="TRANSFER",
+                operation_type=OperationType.TRANSFER,
                 request_hash=request_hash,
                 response_payload=response_payload,
             )

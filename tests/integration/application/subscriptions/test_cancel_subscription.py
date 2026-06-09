@@ -16,6 +16,7 @@ from app.domain.subscriptions.billing_period import BillingPeriod
 from app.domain.subscriptions.subscription_status import SubscriptionStatus
 from app.infrastructure.database.models.actor import ActorModel
 from app.infrastructure.database.models.subscription import SubscriptionModel
+from app.domain.actors.actor_type import ActorType
 
 @pytest.mark.asyncio
 async def test_cancel_subscription_success(uow):
@@ -27,14 +28,14 @@ async def test_cancel_subscription_success(uow):
         tx.session.add(
             ActorModel(
                 actor_id=subscriber_id,
-                actor_type="USER",
+                actor_type=ActorType.USER,
             )
         )
 
         tx.session.add(
             ActorModel(
                 actor_id=service_id,
-                actor_type="SERVICE",
+                actor_type=ActorType.SERVICE,
             )
         )
 
@@ -46,10 +47,7 @@ async def test_cancel_subscription_success(uow):
                 amount=1_000,
                 billing_period=BillingPeriod.MONTHLY,
                 status=SubscriptionStatus.ACTIVE,
-                next_billing_at=(
-                    datetime.now(UTC)
-                    + timedelta(days=30)
-                ),
+                next_billing_at=datetime.now(UTC) + timedelta(days=30),
                 retry_after=None,
             )
         )
@@ -82,14 +80,14 @@ async def test_cancel_subscription_already_cancelled(uow):
         tx.session.add(
             ActorModel(
                 actor_id=subscriber_id,
-                actor_type="USER",
+                actor_type=ActorType.USER,
             )
         )
 
         tx.session.add(
             ActorModel(
                 actor_id=service_id,
-                actor_type="SERVICE",
+                actor_type=ActorType.SERVICE,
             )
         )
 
